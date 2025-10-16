@@ -3,6 +3,8 @@ import mongoose from "mongoose";
 const medicalRecordSchema = new mongoose.Schema({
     appointmentId: {
         type: mongoose.Schema.Types.ObjectId,
+        ref: 'Appointment',
+        required: true
     },
 
     doctorId: {
@@ -14,7 +16,7 @@ const medicalRecordSchema = new mongoose.Schema({
     patientId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
-        require: true
+        required: true // Sửa lỗi chính tả: require -> required
     },
 
     diagnosis: {
@@ -52,7 +54,7 @@ const medicalRecordSchema = new mongoose.Schema({
         type: Boolean
     },
 
-    followUpDate: {
+    followUpDate: { // ngày tái khám
         type: Date,
         required: function() {
             return this.followUpRequire

@@ -1,4 +1,24 @@
-import mongoose from 'mongoose'
+import mongoose from 'mongoose';
+
+const slotSchema = new mongoose.Schema({
+    time: {
+        type: String,
+        required: true,
+    },
+
+    isBooked: {
+        type: Boolean,
+        default: false, 
+    },
+
+    appointmentId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Appointment',
+        default: null
+    },
+});
+
+
 
 const doctorScheduleSchema = new mongoose.Schema({
     doctorId: {
@@ -13,29 +33,36 @@ const doctorScheduleSchema = new mongoose.Schema({
         ref: 'Specialization'
     },
 
-    startTime: {
-        type: String,
+    date: {
+        type: Date,
         required: true,
     },
 
-    endTime: {
-        type: String,
+    shift: {
+        type: [String],
+        enum: ['morning', 'afternoon', 'evening'],
         required: true,
     },
 
-    dayOfWeek: {
-        type: Number,
-        required: true
+    availableSlots: [slotSchema],
+
+    createdBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
     },
 
-    isAvailable: {
+    isActive: {
         type: Boolean,
         default: true
     },
+
 }, 
 {
     timestamps: true
-})
+});
+
+//đảm bảo 1 bác sĩ không có 2 lich trùng ngày, trùng ca
+doctorScheduleSchema.index({ doctorId: 1, date: 1, shift: 1 }, { unique: true });
 
 
 export default mongoose.model('DoctorSchedule', doctorScheduleSchema);

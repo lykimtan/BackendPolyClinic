@@ -13,10 +13,38 @@ const appointmentSchema = new mongoose.Schema({
         required: true
     },
 
-    schedulesId: {
+    scheduleId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'DoctorSchedule',
         required: true
+    },
+
+    slotId: {
+        type: mongoose.Schema.Types.ObjectId,
+        required: true,
+
+    },
+// Lấy thông tin appointment cùng với thông tin slot
+// const appointment = await Appointment.findById(appointmentId)
+//     .populate('schedulesId');
+
+// // Tìm slot cụ thể trong DoctorSchedule
+// const slot = appointment.schedulesId.availableSlots.id(appointment.slotId);
+// console.log(slot.time); // Lấy được thời gian của slot
+
+    appointmentDate: {
+        type: Date,
+        required: true
+    },
+
+    reason: {
+        type: String,
+        default: ''
+    },
+
+    notes: {
+        type: String,
+        default: ''
     },
 
     specializationId: {
@@ -25,20 +53,22 @@ const appointmentSchema = new mongoose.Schema({
         required: true
     },
 
-    medicalRecordId: {
+
+    status: {
+        type: String,
+        enum: ['pending', 'confirmed', 'completed', 'canceled'],
+        default: 'pending',
+    },
+
+        medicalRecordId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'MedicalRecord',
         required: function () {
             return this.status === 'completed';
         }
     },
-    status: {
-        type: String,
-        enum: ['pending', 'confirmed', 'completed', 'cancel']
-    },
-    
-
 }, {
+
     timestamps: true
 })
 
