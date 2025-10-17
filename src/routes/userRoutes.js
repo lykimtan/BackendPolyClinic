@@ -14,6 +14,8 @@ import { protect, authorize } from '../middleware/auth.js';
 
 const router = express.Router();
 
+
+
 // Public routes
 router.post('/register', registerUser);
 router.post('/login', loginUser);
@@ -25,8 +27,9 @@ router.put('/change-password', protect, changePassword);
 
 // Admin only routes
 router.get('/', protect, authorize('admin'), getAllUsers);
-router.get('/:id', protect, authorize('admin'), getUserById);
-router.put('/:id', protect, authorize('admin'), updateUser);
+//  protect, authorize('admin')
+router.get('/:id', getUserById);
+router.put('/:id', updateUser);
 router.delete('/:id', protect, authorize('admin'), deleteUser);
 
 export default router;

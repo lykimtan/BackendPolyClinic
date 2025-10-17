@@ -8,7 +8,7 @@ const generateToken = (id) => {
     });
 };
 
-
+//truong __v: trong mỗi document trong mongoose là số lần document đó được chỉnh sửa
 export const registerUser = async (req, res) => {
     try {
         const { firstName, lastName, email, password, role, phone } = req.body;

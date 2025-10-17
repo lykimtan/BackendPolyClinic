@@ -28,17 +28,12 @@ const medicalRecordSchema = new mongoose.Schema({
     },
     notes: String,
     
-    prescribedMedications: [
-        {
-            drugId: {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: 'Medication',
-            required: true,
-            },
-            dosage: String, // liều dùng
-            frequency: String, // tần suất
-        }
-    ],
+    prescribedMedications: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'PrescribedMedication',
+        required: true
+    }, 
+        
     
     testResults: {
         type: [

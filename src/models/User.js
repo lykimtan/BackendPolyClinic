@@ -38,7 +38,7 @@ const userSchema = new mongoose.Schema(
         phone: {
             type: String,
             required: [true, "Số điện thoại không được bỏ trống"],
-            match: [/^[\+]?[1-9][\d]{0,15}$/, 'Vui lòng nhập số điện thoại hợp lệ']
+            match: [/^[\+]?[0-9][\d]{0,10}$/, 'Vui lòng nhập số điện thoại hợp lệ']
         },
 
         address: {
