@@ -7,6 +7,7 @@ import { errorHandler, notFound } from "./middleware/error.js";
 // Import routes
 import userRoutes from "./routes/userRoutes.js";
 import medicationRoutes from "./routes/medicationRoutes.js";
+import fnARoutes from "./routes/FnARoutes.js";
 
 // Load environment variables
 dotenv.config();
@@ -34,6 +35,7 @@ app.use((req, res, next) => {
 // API Routes
 app.use('/api/users', userRoutes);
 app.use('/api/medications', medicationRoutes);
+app.use('/api/fna', fnARoutes);
 
 // Basic route
 app.get('/', (req, res) => {
