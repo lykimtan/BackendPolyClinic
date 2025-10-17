@@ -63,9 +63,6 @@ const appointmentSchema = new mongoose.Schema({
         medicalRecordId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'MedicalRecord',
-        required: function () {
-            return this.status === 'completed';
-        }
     },
 }, {
 

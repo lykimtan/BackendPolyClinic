@@ -1,7 +1,7 @@
 import mongoose from 'mongoose';
 
 const FnASchema = new mongoose.Schema({
-    akserId: {
+    askerId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
         require: true
@@ -41,9 +41,14 @@ const FnASchema = new mongoose.Schema({
         default: 'pending'
     },
 
+    isConfidential:{
+        type: Boolean,
+        default: true
+    }
+
 }, {
     timestamps: true
 })
 
 
-export default mongoose.model('F&A', FnASchema);
+export default mongoose.model('FnA', FnASchema);
