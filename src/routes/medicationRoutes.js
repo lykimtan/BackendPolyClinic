@@ -14,6 +14,6 @@ const router = express.Router();
 
 router.post('/createDrug',   createMedication);
 // protect, authorize('admin', 'doctor', 'staff'),
-router.get('/:id', protect, authorize('admin', 'doctor', 'staff'), getMedication);
+router.get('/:id', protect, getMedication);
 
 export default router;
