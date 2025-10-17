@@ -320,7 +320,7 @@ export const updateUser = async (req, res) => {
 
         // Update user
         Object.keys(req.body).forEach(key => {
-            if (key !== 'password') { // Don't allow password update through this route
+            if (key !== 'password') {
                 user[key] = req.body[key];
             }
         });
