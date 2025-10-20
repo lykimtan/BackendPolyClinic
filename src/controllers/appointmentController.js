@@ -31,7 +31,21 @@ export const getAppointmentByDoctorId = async (req, res) => {
     try{
         const {doctorId} = req.params;
 
-        const appointments = await Appointment.find({doctorId})
+        const {status, date} = req.query;
+
+
+        let filter = {
+            doctorId
+        };
+
+        if(status) {
+            filter.status = status;
+        }
+        if(date) {
+            filter.appointmentDate = date;
+        }
+
+        const appointments = await Appointment.find(filter)
                     .populate('patientId', 'name email phone')
                     .populate('doctorId', 'name email phone')
                     .populate('specializationId', 'name')
@@ -57,33 +71,59 @@ export const getAppointmentByDoctorId = async (req, res) => {
     }
 }
 
-export const getAppointmentByStatus = async(req, res) => {
+
+
+export const getAppointmentByPatientId = async (req, res) => {
     try {
-        const { doctorId } = req.params;
-        const { status } = req.query; // Lấy trạng thái từ query parameters
-        const appointments = await Appointment.find({status, doctorId})
-                    .populate('patientId', 'name email phone')
-                    .populate('doctorId', 'name email phone')
-                    .populate('specializationId', 'name')
-                    .populate('scheduleId', 'date shift')
-                    .sort({appointmentDate: 1});
-  
-        if (!appointments.length) {
-                return res.status(404).json({
-                    success: false,
-                    message: 'No appointment found for this status',
-                });
+        const {patientId} = req.params;
+        const {status, date, doctorId} = req.query;
+
+        let filter = { patientId};
+
+        if(status) {
+            filter.status = status;
         }
+
+        if(date) {
+            filter.appointmentDate = date;
+        }
+
+        if(doctorId) { 
+            filter.doctorId = doctorId;
+        }
+
+        const appointments = await Appointment.find(filter)
+        .populate('doctorId', 'name email')
+        .populate('specializationId', 'name')
+        .populate('patientId', 'name email phone')
+        .populate('scheduleId', 'date shift')
+        .sort({appointmentDate: 1});
+
+        const patient = await User.findById(patientId);
+        if(!patient) {
+            return res.status(404).json({
+                success: false,
+                message:  "Patient not found",
+            })
+        }; 
+
+        if(!appointments.length) {
+            return res.status(404).json({
+                success: false,
+                message: 'No appointment found for this patient'
+            })
+        }
+
         return res.status(200).json({
             success: true,
             count: appointments.length,
             data: appointments,
-            message: `Found ${appointments.length} appointments with status ${status}`
+            message: `Found ${appointments.length} appointments for this patient`
         })
     } catch (error) {
         return res.status(500).json({
             success: false,
-            message: error.message
+            message: 'Some thing went wrong' + error.message
         })
     }
 }

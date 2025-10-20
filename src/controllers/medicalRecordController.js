@@ -5,6 +5,79 @@ import mongoose from 'mongoose';
 
 //tạo hồ sơ y tế mới 
 
+
+export const getAllMedicalRecords = async (req, res) => {
+    try {
+        const records = await MedicalRecord.find().populate('appointmentId').populate('doctorId', 'firstName lastName').populate('patientId', 'firstName lastName').populate('prescribedMedications.drugId', 'name description');
+
+        if(records.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: 'No medical records found'
+            })
+        }
+        return res.status(200).json({
+            success: true,
+            data: records,
+            count: records.length,
+            message: `There are ${records.length} medical records found.`
+        })
+
+    } catch(error) {
+        res.status(500).json({
+            success: false,
+            message: 'Some thing went wrong' + error.message
+        })
+    }
+
+}
+
+
+
+export const getMedicationRecordsByPatient = async (req, res) => {
+    try {
+        const { patientId} = req.params;
+        if(!mongoose.Types.ObjectId.isValid(patientId)) {
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid patient ID'
+            });
+        }
+
+        const patient = await User.findById(patientId);
+        if(!patient) {
+            return res.status(404).json({
+                success: false,
+                message: 'Patient not found'
+            })
+        }
+
+
+        const records = await MedicalRecord.find({patientId}).populate('appointmentId').populate('doctorId', 'firstName lastName').populate('patientId', 'firstName lastName').populate('prescribedMedications.drugId', 'name description');
+
+        if(records.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: "No medical records found for this patient"
+            })
+        }
+
+        return res.status(200).json({
+            success: true,
+            data: records,
+            count: records.length,
+            message: `There are ${records.length} medical records found for this patient.`
+
+        })
+        
+    } catch(error) {
+        res.status(500).json({
+            success: false,
+            message: 'Some thing went wrong' + error.message
+        })
+    }
+}
+
 export const createMedicalRecord = async (req, res) => {
     try {
         const { appointmentId, doctorId, patientId, diagnosis, symptoms, notes, prescribedMedications, testResults, followUpRequire, followUpDate } = req.body;
@@ -94,3 +167,66 @@ export const createMedicalRecord = async (req, res) => {
         });
     }
 }
+
+export const updateMedicalRecord = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const doctorId = req.query.doctorId;
+
+        if(!doctorId) {
+            return res.status(400).json({
+                success: false,
+                message: 'DoctorId need for this action'
+            })
+        }
+
+        const record = await MedicalRecord.findById(id); 
+        if(!record) {
+            return res.status(404).json({
+                success: false,
+                message: 'Medical record not found'
+            });
+        }
+        //khong cho bac si khac chinh sua bang record cua bac si tao ra
+        if(record.doctorId.toString() !== doctorId) {
+            return res.status(403).json({
+                success: false,
+                message: 'You are not authorized to update this medical record'
+            });
+        }
+        const updateData = req.body;
+
+
+        const updatedRecord = await MedicalRecord.findByIdAndUpdate(
+            id,
+            updateData,
+            {
+                new: true,           // trả về bản ghi sau khi cập nhật
+                runValidators: true  // đảm bảo kiểm tra schema
+            }
+        );
+
+        if (!updatedRecord) {
+            return res.status(404).json({
+                success: false,
+                message: 'Medical record not found'
+            });
+        }
+
+        res.status(200).json({
+            success: true,
+            message: 'Medical record updated successfully',
+            data: updatedRecord
+        });
+
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: error.message
+        });
+    }
+};
+
+
+
+

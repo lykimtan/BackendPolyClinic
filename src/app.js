@@ -8,6 +8,8 @@ import { errorHandler, notFound } from "./middleware/error.js";
 import userRoutes from "./routes/userRoutes.js";
 import medicationRoutes from "./routes/medicationRoutes.js";
 import fnARoutes from "./routes/FnARoutes.js";
+import appointmentRoute from "./routes/appointmentRoutes.js";
+import medicalRecordRoutes from "./routes/medicalRecordRoutes.js";
 
 // Load environment variables
 dotenv.config();
@@ -36,6 +38,8 @@ app.use((req, res, next) => {
 app.use('/api/users', userRoutes);
 app.use('/api/medications', medicationRoutes);
 app.use('/api/fna', fnARoutes);
+app.use('/api/appointments', appointmentRoute);
+app.use('/api/medical-records', medicalRecordRoutes);
 
 // Basic route
 app.get('/', (req, res) => {
