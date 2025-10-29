@@ -80,9 +80,9 @@ const userSchema = new mongoose.Schema(
             type: String,
             unique: true,
             sparse: true,
-            required: function() {
-                return ['admin', 'doctor', 'staff'].includes(this.role)
-            }
+            // required: function() {
+            //     return ['admin', 'doctor', 'staff'].includes(this.role)
+            // }
         },
 
         specializationIds: {
@@ -90,9 +90,9 @@ const userSchema = new mongoose.Schema(
                 type: mongoose.Schema.Types.ObjectId,
                 ref: 'Specialization' //relationship many to many with specialization
             }],
-            required: function() {
-                return this.role === 'doctor';
-            }
+            // required: function() {
+            //     return this.role === 'doctor';
+            // }
         }, 
 
 

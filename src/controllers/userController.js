@@ -2,11 +2,20 @@ import User from '../models/User.js';
 import jwt from 'jsonwebtoken';
 
 // Generate JWT Token
-const generateToken = (id) => {
-    return jwt.sign({ id }, process.env.JWT_SECRET, {
-        expiresIn: process.env.JWT_EXPIRE,
-    });
+const generateToken = (user) => {
+  if (!process.env.JWT_SECRET) {
+    throw new Error('Missing JWT_SECRET in environment variables');
+  }
+
+  return jwt.sign(
+    { 
+      _id: user._id
+    }, 
+    process.env.JWT_SECRET, 
+    { expiresIn: process.env.JWT_EXPIRE || '7d' } // mặc định 7 ngày
+  );
 };
+
 
 //truong __v: trong mỗi document trong mongoose là số lần document đó được chỉnh sửa
 export const registerUser = async (req, res) => {
@@ -89,7 +98,7 @@ export const loginUser = async (req, res) => {
         if (!isPasswordValid) {
             return res.status(401).json({
                 success: false,
-                message: 'Invalid credentials'
+                message: 'Sai mật khẩu'
             });
         }
 
@@ -107,6 +116,14 @@ export const loginUser = async (req, res) => {
 
         // Generate token
         const token = generateToken(user._id);
+        
+        // Set cookie with token (works for cross-origin with credentials)
+        res.cookie('auth_token', token, {
+            httpOnly: true,     // không cho JS truy cập (bảo mật XSS)
+            secure: process.env.NODE_ENV === 'production', // HTTPS only in production
+            sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax', // lax for dev, none for production cross-origin
+            maxAge: 7 * 24 * 60 * 60 * 1000, // 7 ngày (match JWT_EXPIRE)
+        });
 
         res.status(200).json({
             success: true,
@@ -124,8 +141,31 @@ export const loginUser = async (req, res) => {
                     avatar: user.avatar,
                     lastLogin: user.lastLogin
                 },
-                token
             }
+        });
+    } catch (error) {
+        res.status(400).json({
+            success: false,
+            message: error.message
+        });
+    }
+};
+
+// @desc    Logout user
+// @route   POST /api/users/logout
+// @access  Public (but should clear cookie)
+export const logoutUser = (req, res) => {
+    try {
+        // Clear the auth_token cookie
+        res.clearCookie('auth_token', {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+        });
+
+        res.status(200).json({
+            success: true,
+            message: 'Logged out successfully'
         });
     } catch (error) {
         res.status(400).json({

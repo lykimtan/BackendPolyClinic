@@ -12,7 +12,7 @@ export const createRecurringSchedule = async (req, res) => {
             //nếu đã có lịch làm việc định kỳ => cập nhật ca làm việc
             await existingSchedule.save();
             return res.status(200).json({
-                sucess: true,
+                success: true,
                 message: 'Recurring schedule updated',
                 data: existingSchedule
             });
@@ -60,8 +60,8 @@ export const getDoctorRecurringSchedules =  async (req, res) => {
 
 export const updateRecurringSchedules = async (req, res) => {
     try {
-        const {recurringScheduledId} = req.params;
-        const recurringSchedule = await RecurringScheduled.findById(recurringScheduledId);
+        const {id} = req.params;
+        const recurringSchedule = await RecurringScheduled.findById(id);
 
         if(!recurringSchedule) {
             return res.status(404).json({

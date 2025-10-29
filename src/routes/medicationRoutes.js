@@ -2,7 +2,8 @@ import express from 'express';
 
 import  {
     createMedication,
-    getMedication
+
+    getMedicationById
     
 } from '../controllers/medicationController.js';
 
@@ -14,6 +15,6 @@ const router = express.Router();
 
 router.post('/createDrug',   createMedication);
 // protect, authorize('admin', 'doctor', 'staff'),
-router.get('/:id', protect, getMedication);
+router.get('/:medicationId', protect, getMedicationById);
 
 export default router;

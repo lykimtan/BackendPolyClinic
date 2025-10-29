@@ -16,9 +16,9 @@ router.get('/doctor/:doctorId', protect, authorize('doctor', 'staff', 'admin'), 
 router.get('/patientId/:patientId', protect, authorize('patient', 'admin', 'staff'), getAppointmentByPatientId);
 
 router.post('/', protect, authorize('patient'), createAppointment);
-router.put('/:id/status', protect, authorize('doctor', 'staff'), updateAppointmentStatus);
+router.put('/:appointmentId/status', protect, authorize('doctor', 'staff'), updateAppointmentStatus);
 
-router.delete('/:id', protect, authorize('patient'), deleteAppointment);
+router.delete('/:appointmentId', protect, authorize('patient'), deleteAppointment);
 
 export default router;
 

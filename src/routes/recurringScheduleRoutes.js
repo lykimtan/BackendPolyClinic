@@ -2,7 +2,8 @@ import express from 'express';
 import {
     createRecurringSchedule,
     getDoctorRecurringSchedules,
-    deleteRecurringSchedule
+    deleteRecurringSchedule,
+    updateRecurringSchedules
 } from '../controllers/recurringScheduleController.js';
 
 import {protect, authorite} from '../middleware/auth.js'
@@ -26,5 +27,8 @@ router.route('/doctor/:doctorId')
 //xoa
 router.route('/:id') 
     .delete(authorite('admin', 'staff'), deleteRecurringSchedule);
+
+router.route('/:id')
+    .put(authorite('admin', 'staff'), updateRecurringSchedules);
 
 export default router;

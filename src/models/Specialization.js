@@ -7,12 +7,12 @@ const specializationSchema = new mongoose.Schema({
         required: [true, 'Tên khoa không được để trống'],
     },
     
-    descripton: String,
+    description: String,
     image: {
         type: String,
     },
     symptom: {
-        type: [String]
+        type: String,
     }
 }, 
     {

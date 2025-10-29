@@ -170,7 +170,7 @@ export const createMedicalRecord = async (req, res) => {
 
 export const updateMedicalRecord = async (req, res) => {
     try {
-        const { id } = req.params;
+        const { recordId } = req.params;
         const doctorId = req.query.doctorId;
 
         if(!doctorId) {
@@ -180,7 +180,7 @@ export const updateMedicalRecord = async (req, res) => {
             })
         }
 
-        const record = await MedicalRecord.findById(id); 
+        const record = await MedicalRecord.findById(recordId); 
         if(!record) {
             return res.status(404).json({
                 success: false,
@@ -198,7 +198,7 @@ export const updateMedicalRecord = async (req, res) => {
 
 
         const updatedRecord = await MedicalRecord.findByIdAndUpdate(
-            id,
+            recordId,
             updateData,
             {
                 new: true,           // trả về bản ghi sau khi cập nhật
