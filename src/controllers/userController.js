@@ -123,6 +123,7 @@ export const loginUser = async (req, res) => {
             secure: process.env.NODE_ENV === 'production', // HTTPS only in production
             sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax', // lax for dev, none for production cross-origin
             maxAge: 7 * 24 * 60 * 60 * 1000, // 7 ngày (match JWT_EXPIRE)
+            path: '/', // Explicitly set path
         });
 
         res.status(200).json({
@@ -135,6 +136,8 @@ export const loginUser = async (req, res) => {
                     lastName: user.lastName,
                     fullName: user.fullName,
                     email: user.email,
+                    phone: user.phone,
+                    dateOfBirth: user.dateOfBirth,
                     role: user.role,
                     employeeId: user.employeeId,
                     department: user.department,
@@ -161,6 +164,7 @@ export const logoutUser = (req, res) => {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
             sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+            path: '/', 
         });
 
         res.status(200).json({
@@ -180,7 +184,7 @@ export const logoutUser = (req, res) => {
 // @access  Private
 export const getUserProfile = async (req, res) => {
     try {
-        const user = await User.findById(req.user.id);
+        const user = await User.findById(req.user._id);
         
         if (!user) {
             return res.status(404).json({
@@ -206,7 +210,7 @@ export const getUserProfile = async (req, res) => {
 // @access  Private
 export const updateUserProfile = async (req, res) => {
     try {
-        const user = await User.findById(req.user.id);
+        const user = await User.findById(req.user._id);
         
         if (!user) {
             return res.status(404).json({
@@ -218,8 +222,8 @@ export const updateUserProfile = async (req, res) => {
         // Fields that can be updated
         const allowedUpdates = [
             'firstName', 'lastName', 'phone', 'address', 'avatar',
-            'allergies', 'medicalHistory', 'emergencyContact', 'department',
-            'specialization', 'yearsOfExperience'
+            'dateOfBirth', 'gender', 'allergies', 'medicalHistory', 
+            'emergencyContact', 'department', 'specialization', 'yearsOfExperience'
         ];
 
         // Update only allowed fields
@@ -228,6 +232,10 @@ export const updateUserProfile = async (req, res) => {
                 user[field] = req.body[field];
             }
         });
+
+        if(req.file) {
+            user.avatar = `uploads/user/avatars/${req.file.filename}`;
+        }
 
         await user.save();
 
@@ -424,7 +432,7 @@ export const changePassword = async (req, res) => {
             });
         }
 
-        const user = await User.findById(req.user.id).select('+password');
+        const user = await User.findById(req.user._id).select('+password');
         
         if (!user) {
             return res.status(404).json({
@@ -449,6 +457,42 @@ export const changePassword = async (req, res) => {
         res.status(200).json({
             success: true,
             message: 'Password changed successfully'
+        });
+    } catch (error) {
+        res.status(400).json({
+            success: false,
+            message: error.message
+        });
+    }
+};
+
+// @desc    Upload user avatar
+// @route   POST /api/users/upload-avatar
+// @access  Private
+export const uploadUserAvatar = async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({
+                success: false,
+                message: 'No file uploaded'
+            });
+        }
+
+        const avatarUrl = `/uploads/user/avatars/${req.file.filename}`;
+        
+        const user = await User.findById(req.user._id);
+        if (user) {
+            user.avatar = avatarUrl;
+            await user.save();
+        }
+
+        res.status(200).json({
+            success: true,
+            message: 'Avatar uploaded successfully',
+            data: {
+                avatarUrl: avatarUrl,
+                filename: req.file.filename
+            }
         });
     } catch (error) {
         res.status(400).json({

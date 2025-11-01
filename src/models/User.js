@@ -98,17 +98,13 @@ const userSchema = new mongoose.Schema(
 
         licenseNumber: {
             type: String,
-            required: function() {
-                return this.role === 'doctor';
-            }
+
         },
 
         yearsOfExperience: {
             type: Number,
             min: 0,
-            required: function() {
-                return this.role === 'doctor'
-            }
+
         },
 
         isActive: {
@@ -125,14 +121,14 @@ const userSchema = new mongoose.Schema(
         }
     }, {
         timestamps: true,
-        toJson: {virtuals: true},
-        toObject: {virtuals: true}
+        toJSON: { virtuals: true },  // Fix: toJSON not toJson
+        toObject: { virtuals: true }
     }
 )
 
-//virtual fullname
+//virtual fullName (change from fullname to match camelCase)
 
-userSchema.virtual('fullname').get(function() {
+userSchema.virtual('fullName').get(function() {
     return `${this.lastName} ${this.firstName}`;
 });
 

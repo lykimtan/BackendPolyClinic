@@ -10,6 +10,7 @@ import medicationRoutes from "./routes/medicationRoutes.js";
 import fnARoutes from "./routes/FnARoutes.js";
 import appointmentRoute from "./routes/appointmentRoutes.js";
 import medicalRecordRoutes from "./routes/medicalRecordRoutes.js";
+import roleRequestRoutes from "./routes/roleRequestRoutes.js";
 import cookieParser from 'cookie-parser'; //import cookie-parser
 
 
@@ -23,6 +24,7 @@ connectDB();
 
 // Middleware
 app.use(cookieParser());
+app.use("/uploads", express.static("uploads"));
 app.use(cors({
     origin: process.env.FRONTEND_URL || "http://localhost:5173",
     credentials: true
@@ -43,6 +45,7 @@ app.use('/api/medications', medicationRoutes);
 app.use('/api/fna', fnARoutes);
 app.use('/api/appointments', appointmentRoute);
 app.use('/api/medical-records', medicalRecordRoutes);
+app.use('/api/role-requests', roleRequestRoutes);
 
 // Basic route
 app.get('/', (req, res) => {

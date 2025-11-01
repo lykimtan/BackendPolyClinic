@@ -4,7 +4,7 @@ import User from '../models/User.js';
 // Protect routes - check if user is authenticated
 export const protect = async (req, res, next) => {
     try {
-        const token = req.cookies.token;
+        const token = req.cookies.auth_token;
 
         if (!token) {
             return res.status(401).json({
@@ -18,7 +18,7 @@ export const protect = async (req, res, next) => {
             const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
             // Tìm user từ token
-            req.user = await User.findById(decoded.id).select('-password');
+            req.user = await User.findById(decoded._id).select('-password');
 
             if (!req.user) {
                 return res.status(401).json({
