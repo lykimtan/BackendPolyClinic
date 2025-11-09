@@ -1,13 +1,13 @@
 import express from 'express';
 import {
-    createFrequencyQuestion,
-    getAllFnA,
-    getFnAByAsker,
-    getPublishedFnA,
-    updateFnA,
-    deleteFnA,
-    getFnAByResponder,
-    updateFnAPublicationStatus
+  createFrequencyQuestion,
+  getAllFnA,
+  getFnAByAsker,
+  getPublishedFnA,
+  updateFnA,
+  deleteFnA,
+  getFnAByResponder,
+  updateFnAPublicationStatus,
 } from '../controllers/FnAController.js';
 import { protect, authorize } from '../middleware/auth.js';
 
@@ -19,7 +19,6 @@ router.get('/all', getAllFnA);
 router.get('/published', getPublishedFnA);
 router.get('/asker/:askerId', getFnAByAsker);
 router.get('/responder/:doctorId', getFnAByResponder);
-
 
 router.post('/create', createFrequencyQuestion);
 router.put('/update/:id', updateFnA);

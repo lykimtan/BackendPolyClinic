@@ -1,13 +1,12 @@
 import express from 'express';
 import {
-    createRecurringSchedule,
-    getDoctorRecurringSchedules,
-    deleteRecurringSchedule,
-    updateRecurringSchedules
+  createRecurringSchedule,
+  getDoctorRecurringSchedules,
+  deleteRecurringSchedule,
+  updateRecurringSchedules,
 } from '../controllers/recurringScheduleController.js';
 
-import {protect, authorite} from '../middleware/auth.js'
-
+import { protect, authorite } from '../middleware/auth.js';
 
 const router = express.Router();
 
@@ -16,19 +15,15 @@ router.use(protect);
 
 //tao va lay tat ca lich dinh ky
 
-router.route('/')
-    .post(authorite('staff', 'admin'), createRecurringSchedule);
+router.route('/').post(authorite('staff', 'admin'), createRecurringSchedule);
 
 //lay lich dinh ky theo bac si
 
-router.route('/doctor/:doctorId')
-    .get(authorite('admin', 'staff'), getDoctorRecurringSchedules);
+router.route('/doctor/:doctorId').get(authorite('admin', 'staff'), getDoctorRecurringSchedules);
 
 //xoa
-router.route('/:id') 
-    .delete(authorite('admin', 'staff'), deleteRecurringSchedule);
+router.route('/:id').delete(authorite('admin', 'staff'), deleteRecurringSchedule);
 
-router.route('/:id')
-    .put(authorite('admin', 'staff'), updateRecurringSchedules);
+router.route('/:id').put(authorite('admin', 'staff'), updateRecurringSchedules);
 
 export default router;

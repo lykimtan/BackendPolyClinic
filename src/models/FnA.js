@@ -1,54 +1,54 @@
 import mongoose from 'mongoose';
 
-const FnASchema = new mongoose.Schema({
+const FnASchema = new mongoose.Schema(
+  {
     askerId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'User',
-        require: true
-
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      require: true,
     },
 
     doctorId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'User',
-        required: function() {
-            return this.answer && this.status === 'answered';
-        }
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      required: function () {
+        return this.answer && this.status === 'answered';
+      },
     },
 
     question: {
-        type: String,
-        required: true,
+      type: String,
+      required: true,
     },
 
     answer: {
-        type: String,
+      type: String,
     },
 
     img: {
-        type: String,
-        default: null
+      type: String,
+      default: null,
     },
 
     isPublished: {
-        type: Boolean,
-        default: true
+      type: Boolean,
+      default: true,
     },
 
     status: {
-        type: String,
-        enum: ['pending', 'answered', 'closed'],
-        default: 'pending'
+      type: String,
+      enum: ['pending', 'answered', 'closed'],
+      default: 'pending',
     },
 
-    isConfidential:{
-        type: Boolean,
-        default: true
-    }
-
-}, {
-    timestamps: true
-})
-
+    isConfidential: {
+      type: Boolean,
+      default: true,
+    },
+  },
+  {
+    timestamps: true,
+  }
+);
 
 export default mongoose.model('FnA', FnASchema);

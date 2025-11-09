@@ -7,7 +7,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // Ensure uploads directory exists
-const uploadsDir = path.join(__dirname, '../../uploads/roleRequests/documents');
+const uploadsDir = path.join(__dirname, '../../uploads/specializations/specializationImages');
 if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true });
 }
@@ -38,7 +38,7 @@ const fileFilter = (req, file, cb) => {
 };
 
 // Create multer upload instance
-export const uploadDocument = multer({
+export const uploadSpecializationImage = multer({
   storage: storage,
   limits: {
     fileSize: 10 * 1024 * 1024, // 10MB limit for documents

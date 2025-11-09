@@ -1,12 +1,12 @@
 import express from 'express';
 import {
-    getAllMedicalRecords,
-    getMedicationRecordsByPatient,
-    createMedicalRecord,
-    updateMedicalRecord
+  getAllMedicalRecords,
+  getMedicationRecordsByPatient,
+  createMedicalRecord,
+  updateMedicalRecord,
 } from '../controllers/medicalRecordController.js';
 
-import { protect, authorize} from '../middleware/auth.js';
+import { protect, authorize } from '../middleware/auth.js';
 import e from 'express';
 
 const router = express.Router();

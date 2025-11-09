@@ -1,12 +1,12 @@
 import express from 'express';
 import {
-    submitRoleRequest,
-    getAllPendingRoleRequests,
-    getUserRoleRequests,
-    acceptRoleRequest,
-    rejectedRoleRequest,
-    deleteRoleRequest,
-    uploadDocumentProof
+  submitRoleRequest,
+  getAllPendingRoleRequests,
+  getUserRoleRequests,
+  acceptRoleRequest,
+  rejectedRoleRequest,
+  deleteRoleRequest,
+  uploadDocumentProof,
 } from '../controllers/roleRequestController.js';
 import { protect } from '../middleware/auth.js';
 import { uploadDocument } from '../middleware/handleUploadDocument.js';
@@ -23,9 +23,9 @@ router.post('/submit', protect, submitRoleRequest);
 router.get('/my-requests', protect, getUserRoleRequests);
 
 // Admin routes
-router.get('/pending', protect,  getAllPendingRoleRequests);
+router.get('/pending', protect, getAllPendingRoleRequests);
 router.patch('/:requestId/approve', protect, acceptRoleRequest);
-router.patch('/:requestId/reject', protect,  rejectedRoleRequest);
+router.patch('/:requestId/reject', protect, rejectedRoleRequest);
 router.delete('/:requestId', protect, deleteRoleRequest);
 
 export default router;

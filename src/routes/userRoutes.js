@@ -1,27 +1,25 @@
 import express from 'express';
 import {
-    registerUser,
-    loginUser,
-    logoutUser,
-    getUserProfile,
-    updateUserProfile,
-    getAllUsers,
-    getUserById,
-    updateUser,
-    deleteUser,
-    changePassword,
-    uploadUserAvatar
+  registerUser,
+  loginUser,
+  logoutUser,
+  getUserProfile,
+  updateUserProfile,
+  getAllUsers,
+  getUserById,
+  updateUser,
+  deleteUser,
+  changePassword,
+  uploadUserAvatar,
 } from '../controllers/userController.js';
 import { protect, authorize } from '../middleware/auth.js';
 import { uploadAvatar } from '../middleware/handleUploadAvatar.js';
 
 const router = express.Router();
 
-
-
 // Public routes
 router.post('/register', registerUser);
-router.post('/login',  loginUser);
+router.post('/login', loginUser);
 router.post('/logout', logoutUser);
 
 // Protected routes (requires authentication)

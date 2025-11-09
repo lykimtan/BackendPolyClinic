@@ -1,47 +1,50 @@
 import mongoose from 'mongoose';
 
-const roleRequestSchema = new mongoose.Schema({
+const roleRequestSchema = new mongoose.Schema(
+  {
     userId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'User',
-        required: true,
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      required: true,
     },
 
     requestedRole: {
-        type: String,
-        enum: ['doctor', 'staff', 'admin'],
-        required: true,
+      type: String,
+      enum: ['doctor', 'staff', 'admin'],
+      required: true,
     },
     status: {
-        type: String,
-        enum: ['pending', 'approved', 'rejected'],
-        default: 'pending',
+      type: String,
+      enum: ['pending', 'approved', 'rejected'],
+      default: 'pending',
     },
     documentProof: {
-        type: String, 
+      type: String,
     },
 
     licenseNumber: {
-        type: String,
+      type: String,
     },
     reviewedBy: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'User',
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
     },
     reviewedAt: {
-        type: Date,
+      type: Date,
     },
-    specializationIds: [{
+    specializationIds: [
+      {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Specialization',
-    }],
+      },
+    ],
     note: {
-        type: String,
+      type: String,
     },
-},
-{
+  },
+  {
     timestamps: true,
-}
-)
+  }
+);
 
 export default mongoose.model('RoleRequest', roleRequestSchema);
