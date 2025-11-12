@@ -21,7 +21,7 @@ export const createRecurringSchedule = async (req, res) => {
       doctorId,
       dayOfWeek,
       shift,
-      createdBy: req.user._id,
+ 
     });
     await newRecurringSchedule.save();
 
@@ -41,10 +41,9 @@ export const createRecurringSchedule = async (req, res) => {
 export const getDoctorRecurringSchedules = async (req, res) => {
   try {
     const { doctorId } = req.params;
-    const schedules = await RecurringScheduled.find({ doctorId }).sort({ dayOfWeek: 1 }); //sap xep tu thu 2 den chunhat
+    const schedules = await RecurringScheduled.findOne({ doctorId }).sort({ dayOfWeek: 1 }); //sap xep tu thu 2 den chunhat
     res.status(200).json({
       success: true,
-      count: schedules.length,
       data: schedules,
     });
   } catch (error) {
@@ -106,3 +105,25 @@ export const deleteRecurringSchedule = async (req, res) => {
     });
   }
 };
+
+  export const getRecurringById = async (req, res) => {
+    try {
+      const { id } = req.params;
+      const schedule = await RecurringScheduled.findById(id);
+      if (!schedule) {
+        return res.status(404).json({
+          success: false,
+          message: 'Recurring schedule not found',
+        });
+      }
+      return res.status(200).json({
+        success: true,
+        data: schedule,
+      });
+    } catch (error) {
+      res.status(400).json({
+        success: false,
+        message: error.message,
+      });
+    }
+  };

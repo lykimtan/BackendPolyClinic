@@ -16,12 +16,12 @@ const router = express.Router();
 router.post(
   '/upload-image',
   protect,
-  uploadSpecializationImage.single('image'),
+  uploadSpecializationImage.single('specImage'),
   uploadImageSpecialization
 );
 
 // Create a new specialization (admin only)
-router.post('/', protect, createSpecialization);
+router.post('/', createSpecialization);
 // authorize('admin'),
 
 // Get all specializations (public)

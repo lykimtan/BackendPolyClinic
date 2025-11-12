@@ -13,8 +13,13 @@ import appointmentRoute from './routes/appointmentRoutes.js';
 import medicalRecordRoutes from './routes/medicalRecordRoutes.js';
 import roleRequestRoutes from './routes/roleRequestRoutes.js';
 import specializationRoutes from './routes/specializationRoute.js';
+import RecurringScheduledules from './routes/recurringScheduleRoutes.js';
+import doctorRoutes from './routes/doctorRoutes.js';
 import authRoutes from './routes/authRoutes.js';
 import cookieParser from 'cookie-parser'; //import cookie-parser
+
+// Import cronjob (automatically starts when imported)
+import './utils/cronSchedule.js';
 
 // Load environment variables
 dotenv.config();
@@ -59,6 +64,8 @@ app.use('/api/appointments', appointmentRoute);
 app.use('/api/medical-records', medicalRecordRoutes);
 app.use('/api/role-requests', roleRequestRoutes);
 app.use('/api/specializations', specializationRoutes);
+app.use('/api/doctors', doctorRoutes);
+app.use('/api/recurring-schedules', RecurringScheduledules);
 
 // Basic route
 app.get('/', (req, res) => {

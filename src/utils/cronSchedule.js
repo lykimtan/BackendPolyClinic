@@ -56,6 +56,7 @@ cron.schedule('0 0 * * 0', async () => {
       'doctorId',
       'specializationId'
     );
+    console.log(`Tìm thấy ${recurringSchedules.length} lịch định kỳ.`);
 
     let createdCount = 0;
     let errorCount = 0;

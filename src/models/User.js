@@ -103,6 +103,7 @@ const userSchema = new mongoose.Schema(
 
     yearsOfExperience: {
       type: Number,
+      default: 1,
       min: 0,
     },
 
