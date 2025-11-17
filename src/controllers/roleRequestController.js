@@ -126,7 +126,6 @@ export const getUserRoleRequests = async (req, res) => {
 export const acceptRoleRequest = async (req, res) => {
   try {
     const { requestId } = req.params;
-
     const roleRequest = await RoleRequest.findById(requestId);
     if (!roleRequest) {
       return res.status(404).json({

@@ -32,6 +32,22 @@ export const createDoctorSchedule = async (req, res) => {
   }
 };
 
+export const getDoctorSchedules = async (req, res) => {
+  try {
+    const {doctorId} = req.params;
+    const schedules = await DoctorSchedule.find({ doctorId}).sort({ date: 1});
+    if (!schedules || schedules.length === 0) {
+      return res.status(404).json({ message: 'No schedules found for this doctor' });
+    }
+    res.status(200).json({
+      success: true,
+      data: schedules,
+    });
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+}
+
 /* mau du lieu recurring cua mot bac si
 [
   {

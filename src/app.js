@@ -16,6 +16,7 @@ import specializationRoutes from './routes/specializationRoute.js';
 import RecurringScheduledules from './routes/recurringScheduleRoutes.js';
 import doctorRoutes from './routes/doctorRoutes.js';
 import authRoutes from './routes/authRoutes.js';
+import DoctorScheduleRoutes from './routes/doctorScheduleRoutes.js';
 import cookieParser from 'cookie-parser'; //import cookie-parser
 
 // Import cronjob (automatically starts when imported)
@@ -66,6 +67,7 @@ app.use('/api/role-requests', roleRequestRoutes);
 app.use('/api/specializations', specializationRoutes);
 app.use('/api/doctors', doctorRoutes);
 app.use('/api/recurring-schedules', RecurringScheduledules);
+app.use('/api/doctor-schedules', DoctorScheduleRoutes);
 
 // Basic route
 app.get('/', (req, res) => {

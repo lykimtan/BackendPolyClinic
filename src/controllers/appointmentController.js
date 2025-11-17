@@ -69,6 +69,84 @@ export const getAppointmentByDoctorId = async (req, res) => {
   }
 };
 
+export const getAllAppointmentsByDate = async (req, res) => {
+  try {
+    const { date } = req.query;
+    
+    if (!req.user || !req.user._id) {
+      return res.status(401).json({
+        success: false,
+        message: 'User not authenticated',
+      });
+    }
+    
+    const doctorId = req.user._id;
+    
+    if (!date) {
+      return res.status(400).json({
+        success: false,
+        message: 'Date parameter is required',
+      });
+    }
+    
+    // Tạo khoảng thời gian từ đầu đến cuối ngày
+    const startOfDay = new Date(date);
+    startOfDay.setHours(0, 0, 0, 0);
+    
+    const endOfDay = new Date(date);
+    endOfDay.setHours(23, 59, 59, 999);
+    
+    const appointments = await Appointment.find({
+      doctorId,
+      appointmentDate: {
+        $gte: startOfDay,
+        $lte: endOfDay
+      }
+    })
+      .populate({
+        path: 'patientId',
+        select: 'firstName lastName email phone dateOfBirth gender',
+      })
+      .populate('specializationId', 'name')
+      .populate({
+        path: 'scheduleId',
+        select: 'date shift availableSlots',
+      })
+      .populate('doctorId', 'firstName lastName email phone')
+      .sort({ appointmentDate: 1 });
+    
+    // Gắn thông tin slot vào mỗi appointment
+    const appointmentsWithSlots = appointments.map(apt => {
+      const aptObj = apt.toObject();
+      if (aptObj.scheduleId && aptObj.scheduleId.availableSlots) {
+        const slot = aptObj.scheduleId.availableSlots.find(
+          s => s._id.toString() === aptObj.slotId.toString()
+        );
+        aptObj.slotId = slot || aptObj.slotId;
+      }
+      return aptObj;
+    });
+    if(!appointmentsWithSlots.length) {
+      return res.json({
+        success: false,
+        data: [],
+        message: 'No appointment found for this date',
+      });
+    }
+    return res.status(200).json({
+      success: true,
+      count: appointmentsWithSlots.length,
+      data: appointmentsWithSlots,
+      message: `Found ${appointmentsWithSlots.length} appointments for this date`,
+    });
+  } catch(error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+}
+
 export const getAppointmentByPatientId = async (req, res) => {
   try {
     const { patientId } = req.params;
@@ -129,7 +207,6 @@ export const getAppointmentByPatientId = async (req, res) => {
 export const createAppointment = async (req, res) => {
   try {
     const {
-      patientId,
       doctorId,
       scheduleId,
       slotId,
@@ -139,9 +216,16 @@ export const createAppointment = async (req, res) => {
       specializationId,
     } = req.body;
 
+    const patientId = req.user._id;
+
     // Kiểm tra thông tin bắt buộc
+    if(!patientId) {
+      return res.status(401).json({
+        success: false,
+        message: 'Unauthorized - User not authenticated',
+      });
+    }
     if (
-      !patientId ||
       !doctorId ||
       !scheduleId ||
       !slotId ||

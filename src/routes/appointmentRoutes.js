@@ -4,6 +4,7 @@ import {
   createAppointment,
   updateAppointmentStatus,
   deleteAppointment,
+  getAllAppointmentsByDate,
   getAppointmentByDoctorId,
   getAppointmentByPatientId,
 } from '../controllers/appointmentController.js';
@@ -12,10 +13,12 @@ import { protect, authorize } from '../middleware/auth.js';
 const router = express.Router();
 
 router.get('/', protect, authorize('admin', 'staff'), getAllAppointments);
+
+router.get('/doctor/appointment-today', protect, authorize('doctor', 'staff'), getAllAppointmentsByDate);
+
 router.get(
   '/doctor/:doctorId',
   protect,
-  authorize('doctor', 'staff', 'admin'),
   getAppointmentByDoctorId
 );
 router.get(
@@ -25,7 +28,7 @@ router.get(
   getAppointmentByPatientId
 );
 
-router.post('/', protect, authorize('patient'), createAppointment);
+router.post('/', protect, createAppointment);
 router.put(
   '/:appointmentId/status',
   protect,
