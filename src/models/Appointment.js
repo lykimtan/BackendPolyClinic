@@ -47,6 +47,11 @@ const appointmentSchema = new mongoose.Schema(
       default: '',
     },
 
+    reasonForRejection: {
+      type: String,
+      default: '',
+    },
+
     specializationId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Specialization',
@@ -55,7 +60,7 @@ const appointmentSchema = new mongoose.Schema(
 
     status: {
       type: String,
-      enum: ['pending', 'confirmed', 'completed', 'canceled'],
+      enum: ['pending', 'confirmed', 'completed', 'cancelled', 'rejected'],
       default: 'pending',
     },
 

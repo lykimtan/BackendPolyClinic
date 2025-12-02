@@ -17,7 +17,7 @@ const medicalRecordSchema = new mongoose.Schema(
     patientId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
-      required: true, // Sửa lỗi chính tả: require -> required
+      required: true, 
     },
 
     diagnosis: {
@@ -32,7 +32,6 @@ const medicalRecordSchema = new mongoose.Schema(
     prescribedMedications: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'PrescribedMedication',
-      required: true,
     },
 
     testResults: {

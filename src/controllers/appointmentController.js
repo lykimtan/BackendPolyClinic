@@ -12,6 +12,8 @@ export const getAllAppointments = async (req, res) => {
         message: 'No appointment found',
       });
     }
+
+    
     return res.status(200).json({
       success: true,
       count: appointments.length,
@@ -44,10 +46,10 @@ export const getAppointmentByDoctorId = async (req, res) => {
     }
 
     const appointments = await Appointment.find(filter)
-      .populate('patientId', 'name email phone')
-      .populate('doctorId', 'name email phone')
+      .populate('patientId', 'firstName lastName email phone')
+      .populate('doctorId', 'firstName lastName email phone')
       .populate('specializationId', 'name')
-      .populate('scheduleId', 'date shift')
+      .populate('scheduleId', 'date shift availableSlots')
       .sort({ appointmentDate: 1 });
     if (!appointments.length) {
       return res.status(404).json({
@@ -55,11 +57,30 @@ export const getAppointmentByDoctorId = async (req, res) => {
         message: 'No appointment found for this doctor',
       });
     }
+     // Gắn thông tin slot vào mỗi appointment
+     
+   const appointmentsWithSlots = appointments.map(apt => {
+      const aptObj = apt.toObject();
+      if (aptObj.scheduleId && aptObj.scheduleId.availableSlots) {
+        const slot = aptObj.scheduleId.availableSlots.find(
+          s => s._id.toString() === aptObj.slotId.toString()
+        );
+        aptObj.slotId = slot || aptObj.slotId;
+      }
+      return aptObj;
+    });
+    if(!appointmentsWithSlots.length) {
+      return res.json({
+        success: false,
+        data: [],
+        message: 'No appointment found for this date',
+      });
+    }
     return res.status(200).json({
       success: true,
-      count: appointments.length,
-      data: appointments,
-      message: `Found ${appointments.length} appointments for this doctor`,
+      count: appointmentsWithSlots.length,
+      data: appointmentsWithSlots,
+      message: `Found ${appointmentsWithSlots.length} appointments for this date`,
     });
   } catch (error) {
     return res.status(500).json({
@@ -147,6 +168,46 @@ export const getAllAppointmentsByDate = async (req, res) => {
   }
 }
 
+export const updateMedicalRecordForAppointment = async (req, res) => {
+  try {
+    const { appointmentId } = req.params;
+    const { medicalRecordId } = req.body;
+
+    // Validate input
+    if (!medicalRecordId) {
+      return res.status(400).json({
+        success: false,
+        message: 'medicalRecordId is required',
+      });
+    }
+
+    // Check appointment exists
+    const appointment = await Appointment.findById(appointmentId);
+    if (!appointment) {
+      return res.status(404).json({
+        success: false,
+        message: 'Appointment not found',
+      });
+    }
+
+    // Update medicalRecordId
+    appointment.medicalRecordId = medicalRecordId;
+    await appointment.save();
+
+    return res.status(200).json({
+      success: true,
+      message: 'Medical record ID updated successfully',
+      data: appointment,
+    });
+  } catch (error) {
+    console.error('Error updating medical record for appointment:', error);
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
 export const getAppointmentByPatientId = async (req, res) => {
   try {
     const { patientId } = req.params;
@@ -167,10 +228,10 @@ export const getAppointmentByPatientId = async (req, res) => {
     }
 
     const appointments = await Appointment.find(filter)
-      .populate('doctorId', 'name email')
+      .populate('doctorId', 'firstName lastName email')
       .populate('specializationId', 'name')
-      .populate('patientId', 'name email phone')
-      .populate('scheduleId', 'date shift')
+      .populate('patientId', 'name firstName lastName email phone')
+      .populate('scheduleId', 'date shift availableSlots')
       .sort({ appointmentDate: 1 });
 
     const patient = await User.findById(patientId);
@@ -188,11 +249,68 @@ export const getAppointmentByPatientId = async (req, res) => {
       });
     }
 
+     const appointmentsWithSlots = appointments.map(apt => {
+      const aptObj = apt.toObject();
+      if (aptObj.scheduleId && aptObj.scheduleId.availableSlots) {
+        const slot = aptObj.scheduleId.availableSlots.find(
+          s => s._id.toString() === aptObj.slotId.toString()
+        );
+        aptObj.slotId = slot || aptObj.slotId;
+      }
+      return aptObj;
+    });
+    if(!appointmentsWithSlots.length) {
+      return res.json({
+        success: false,
+        data: [],
+        message: 'No appointment found for this date',
+      });
+    }
     return res.status(200).json({
       success: true,
-      count: appointments.length,
-      data: appointments,
-      message: `Found ${appointments.length} appointments for this patient`,
+      count: appointmentsWithSlots.length,
+      data: appointmentsWithSlots,
+      message: `Found ${appointmentsWithSlots.length} appointments for this date`,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: 'Some thing went wrong' + error.message,
+    });
+  }
+};
+
+
+//get appointment by id
+export const getAppointmentById = async (req, res) => {
+  try {
+    const { appointmentId } = req.params;
+    
+    const appointment = await Appointment.findById(appointmentId)
+      .populate('patientId')
+      .populate('doctorId', 'firstName lastName email phone')
+      .populate('specializationId', 'name')
+      .populate('scheduleId', 'date shift availableSlots');
+    if (!appointment) {
+      return res.status(404).json({
+        success: false,
+        message: 'Appointment not found',
+      });
+    }
+    
+    // Gắn thông tin slot vào appointment
+    const appointmentObj = appointment.toObject();
+    if (appointmentObj.scheduleId && appointmentObj.scheduleId.availableSlots) {
+      const slot = appointmentObj.scheduleId.availableSlots.find(
+        s => s._id.toString() === appointmentObj.slotId.toString()
+      );
+      appointmentObj.slotId = slot || appointmentObj.slotId;
+    }
+    
+    return res.status(200).json({
+      success: true,
+      data: appointmentObj,
+      message: 'Appointment details fetched successfully',
     });
   } catch (error) {
     return res.status(500).json({
@@ -354,47 +472,59 @@ export const createAppointment = async (req, res) => {
 export const updateAppointmentStatus = async (req, res) => {
   try {
     const { appointmentId } = req.params;
-    const { status } = req.body;
+    const { status, reasonForRejection } = req.body;
 
-    //check available appointment
+    // 1. Log xem Server thực sự nhận được chữ gì (quan trọng nhất để debug)
+    console.log(`[DEBUG] Update Appointment ${appointmentId}. Received status:`, status);
+
+    // 2. Validate đầu vào
+    if (!status) {
+      return res.status(400).json({
+        success: false,
+        message: 'Status is required in body',
+      });
+    }
+
     const appointment = await Appointment.findById(appointmentId);
     if (!appointment) {
       return res.status(404).json({
         message: 'Appointment not found',
       });
     }
-
-    // Neu co thi update status
-    if (!['cancelled'].includes(status)) {
+    if (status === 'cancelled' || status === 'rejected') {
       appointment.status = status;
+      if(status === 'rejected' && reasonForRejection) {
+        appointment.reasonForRejection = reasonForRejection;
+      }
+      // Khi hủy hoặc từ chối, giải phóng slot
+      
+      const schedule = await DoctorSchedule.findById(appointment.scheduleId);
+      if (schedule) {
+        const slot = schedule.availableSlots.find(
+          (s) => s.appointmentId && s.appointmentId.toString() === appointmentId
+        );
+        
+        if (slot) {
+          slot.isBooked = false;
+          slot.appointmentId = null;
+          await schedule.save();
+          console.log('[DEBUG] Slot released successfully');
+        }
+      }
     } else {
       appointment.status = status;
-      const schedule = await DoctorSchedule.findById(appointment.scheduleId);
-      if (!schedule) {
-        return res.status(404).json({
-          message: 'Schedule not found',
-        });
-      }
-      //update slot isBooked to false
-      const slot = schedule.availableSlots.find(
-        (s) => s.appointmentId.toString() === appointmentId
-      );
-      if (slot) {
-        slot.isBooked = false;
-        slot.appointmentId = null;
-        await schedule.save();
-      } else {
-        console.warn(`No slot found for appointment ${appointmentId} in schedule ${schedule._id}`);
-      }
     }
 
     await appointment.save();
 
     return res.status(200).json({
       success: true,
-      message: 'Appointment status updated sucessfully',
+      message: `Appointment updated to ${status} successfully`,
+      data: appointment // Trả về data mới để frontend cập nhật ngay
     });
+
   } catch (error) {
+    console.error('[ERROR] Update Status:', error);
     return res.status(500).json({
       success: false,
       message: error.message,
@@ -428,14 +558,6 @@ export const deleteAppointment = async (req, res) => {
         success: false,
       });
     }
-    //update slot isBooked to false
-    const slot = schedule.availableSlots.find((s) => s.appointmentId.toString() === appointmentId);
-    if (slot) {
-      slot.isBooked = false;
-      slot.appointmentId = null;
-      await schedule.save();
-    }
-
     await Appointment.findByIdAndDelete(appointmentId);
 
     return res.status(200).json({

@@ -1,6 +1,7 @@
 import MedicalRecord from '../models/MedicalRecord.js';
 import Appointment from '../models/Appointment.js';
 import Medication from '../models/Medication.js';
+import User from '../models/User.js';
 import mongoose from 'mongoose';
 
 //tạo hồ sơ y tế mới
@@ -10,8 +11,7 @@ export const getAllMedicalRecords = async (req, res) => {
     const records = await MedicalRecord.find()
       .populate('appointmentId')
       .populate('doctorId', 'firstName lastName')
-      .populate('patientId', 'firstName lastName')
-      .populate('prescribedMedications.drugId', 'name description');
+      .populate('patientId', 'firstName lastName');
 
     if (records.length === 0) {
       return res.status(404).json({
@@ -43,19 +43,10 @@ export const getMedicationRecordsByPatient = async (req, res) => {
       });
     }
 
-    const patient = await User.findById(patientId);
-    if (!patient) {
-      return res.status(404).json({
-        success: false,
-        message: 'Patient not found',
-      });
-    }
-
     const records = await MedicalRecord.find({ patientId })
       .populate('appointmentId')
       .populate('doctorId', 'firstName lastName')
-      .populate('patientId', 'firstName lastName')
-      .populate('prescribedMedications.drugId', 'name description');
+      .populate('patientId', 'firstName lastName');
 
     if (records.length === 0) {
       return res.status(404).json({
@@ -78,6 +69,42 @@ export const getMedicationRecordsByPatient = async (req, res) => {
   }
 };
 
+export const getMedicalRecordById = async (req, res) => {
+  try {
+    const { recordId } = req.params;
+    
+    if (!mongoose.Types.ObjectId.isValid(recordId)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid medical record ID',
+      });
+    }
+
+    const record = await MedicalRecord.findById(recordId)
+      .populate('appointmentId')
+      .populate('doctorId', 'firstName lastName')
+      .populate('patientId', 'firstName lastName');
+
+    if (!record) {
+      return res.status(404).json({
+        success: false,
+        message: 'Medical record not found',
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      data: record,
+      message: 'Medical record retrieved successfully',
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Some thing went wrong: ' + error.message,
+    });
+  }
+};
+
 export const createMedicalRecord = async (req, res) => {
   try {
     const {
@@ -87,7 +114,6 @@ export const createMedicalRecord = async (req, res) => {
       diagnosis,
       symptoms,
       notes,
-      prescribedMedications,
       testResults,
       followUpRequire,
       followUpDate,
@@ -102,45 +128,6 @@ export const createMedicalRecord = async (req, res) => {
       });
     }
 
-    // Xử lý và validate prescribedMedications
-    let processedMedications = [];
-    if (prescribedMedications && Array.isArray(prescribedMedications)) {
-      // Validate từng medication
-      for (const med of prescribedMedications) {
-        // Kiểm tra các trường bắt buộc
-        if (!med.drugId || !med.dosage || !med.frequency) {
-          return res.status(400).json({
-            success: false,
-            message: 'Mỗi thuốc cần có đầy đủ drugId, dosage và frequency',
-          });
-        }
-
-        // Kiểm tra drugId có phải ObjectId hợp lệ không
-        if (!mongoose.Types.ObjectId.isValid(med.drugId)) {
-          return res.status(400).json({
-            success: false,
-            message: `DrugId ${med.drugId} không hợp lệ`,
-          });
-        }
-
-        // Kiểm tra medication có tồn tại trong database không
-        const medicationExists = await Medication.findById(med.drugId);
-        if (!medicationExists) {
-          return res.status(404).json({
-            success: false,
-            message: `Không tìm thấy thuốc với ID: ${med.drugId}`,
-          });
-        }
-
-        // Thêm vào danh sách đã xử lý
-        processedMedications.push({
-          drugId: med.drugId,
-          dosage: med.dosage.trim(),
-          frequency: med.frequency.trim(),
-        });
-      }
-    }
-
     // Tạo medical record mới
     const newMedicalRecord = new MedicalRecord({
       appointmentId,
@@ -149,7 +136,6 @@ export const createMedicalRecord = async (req, res) => {
       diagnosis: diagnosis?.trim() || '',
       symptoms: symptoms?.trim() || '',
       notes: notes?.trim() || '',
-      prescribedMedications: processedMedications,
       testResults: testResults || [],
       followUpRequire: followUpRequire || false,
       followUpDate: followUpRequire && followUpDate ? new Date(followUpDate) : undefined,
@@ -157,9 +143,8 @@ export const createMedicalRecord = async (req, res) => {
 
     const savedRecord = await newMedicalRecord.save();
 
-    // Populate thông tin thuốc để trả về
+    // Populate thông tin để trả về
     const populatedRecord = await MedicalRecord.findById(savedRecord._id)
-      .populate('prescribedMedications.drugId', 'name description')
       .populate('appointmentId')
       .populate('doctorId', 'firstName lastName')
       .populate('patientId', 'firstName lastName');

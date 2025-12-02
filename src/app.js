@@ -11,6 +11,7 @@ import medicationRoutes from './routes/medicationRoutes.js';
 import fnARoutes from './routes/FnARoutes.js';
 import appointmentRoute from './routes/appointmentRoutes.js';
 import medicalRecordRoutes from './routes/medicalRecordRoutes.js';
+import prescribedMedicationRoutes from './routes/prescribedMedicationRoutes.js';
 import roleRequestRoutes from './routes/roleRequestRoutes.js';
 import specializationRoutes from './routes/specializationRoute.js';
 import RecurringScheduledules from './routes/recurringScheduleRoutes.js';
@@ -36,7 +37,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const uploadsPath = path.join(__dirname, '../uploads');
 app.use('/uploads', express.static(uploadsPath));
-console.log('🟢 Serving static files from:', uploadsPath);
+console.log('Serving static files from:', uploadsPath);
 
 //nghia la khong can dinh nghia cac route rieng cho uploads
 app.use(
@@ -63,6 +64,7 @@ app.use('/api/medications', medicationRoutes);
 app.use('/api/fna', fnARoutes);
 app.use('/api/appointments', appointmentRoute);
 app.use('/api/medical-records', medicalRecordRoutes);
+app.use('/api/prescribed-medications', prescribedMedicationRoutes);
 app.use('/api/role-requests', roleRequestRoutes);
 app.use('/api/specializations', specializationRoutes);
 app.use('/api/doctors', doctorRoutes);
