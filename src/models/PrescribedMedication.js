@@ -23,6 +23,10 @@ const prescribedMedicationSchema = new mongoose.Schema(
           type: String,
           default: '',
         },
+        quantity: {
+          type: Number,
+          default: 1,
+        },
         note: {
           type: String,
           default: '',

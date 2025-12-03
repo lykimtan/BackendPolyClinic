@@ -8,7 +8,6 @@ const medicationSchema = new mongoose.Schema(
     },
 
     genericName: {
-      //tên gốc, tên chung quốc tế
       type: String,
     },
 
@@ -16,13 +15,13 @@ const medicationSchema = new mongoose.Schema(
 
     form: {
       type: String,
-      enum: ['Solid', 'Liquid', 'Cream'],
+      enum: ['tablet', 'capsule', 'lozenge', 'vial', 'liquid', 'injection'],
       required: true,
     },
 
     unit: {
       type: String,
-      enum: ['tab', 'capsule', 'lozenge', 'vial', 'ml', 'ampoule'],
+      enum: ['mg', 'ml', 'g', 'box', 'vial'],
       //viên nén, viên nhộng, thuốc ngậm, thuốc nhỏ, ống
       required: true,
     },
