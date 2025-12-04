@@ -44,7 +44,13 @@ export const getMedicationRecordsByPatient = async (req, res) => {
     }
 
     const records = await MedicalRecord.find({ patientId })
-      .populate('appointmentId')
+      .populate({
+        path: 'appointmentId',
+        populate: {
+          path: 'specializationId',
+          select: 'name',
+        },
+      })
       .populate('doctorId', 'firstName lastName')
       .populate('patientId', 'firstName lastName');
 
@@ -69,6 +75,31 @@ export const getMedicationRecordsByPatient = async (req, res) => {
   }
 };
 
+export const getMedicalRecordCountByPatient = async (req, res) => {
+  try {
+    const { patientId } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(patientId)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid patient ID',
+      });
+    }
+
+    const count = await MedicalRecord.countDocuments({ patientId });
+
+    return res.status(200).json({
+      success: true,
+      count,
+      message: `There are ${count} medical records for this patient.`,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Some thing went wrong' + error.message,
+    });
+  }
+}
+
 export const getMedicalRecordById = async (req, res) => {
   try {
     const { recordId } = req.params;
@@ -81,7 +112,13 @@ export const getMedicalRecordById = async (req, res) => {
     }
 
     const record = await MedicalRecord.findById(recordId)
-      .populate('appointmentId')
+      .populate({
+        path: 'appointmentId',
+        populate: {
+          path: 'specializationId',
+          select: 'name',
+        },
+      })
       .populate('doctorId', 'firstName lastName')
       .populate('patientId', 'firstName lastName');
 
@@ -145,7 +182,13 @@ export const createMedicalRecord = async (req, res) => {
 
     // Populate thông tin để trả về
     const populatedRecord = await MedicalRecord.findById(savedRecord._id)
-      .populate('appointmentId')
+      .populate({
+        path: 'appointmentId',
+        populate: {
+          path: 'specializationId',
+          select: 'name',
+        },
+      })
       .populate('doctorId', 'firstName lastName')
       .populate('patientId', 'firstName lastName');
 

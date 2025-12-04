@@ -1,6 +1,7 @@
 import FnA from '../models/FnA.js';
 import User from '../models/User.js';
 import mongoose from 'mongoose';
+import { deleteImage, getImageUrl } from '../middleware/handleUploadFnAImage.js';
 
 export const createFrequencyQuestion = async (req, res) => {
   try {
@@ -25,10 +26,59 @@ export const createFrequencyQuestion = async (req, res) => {
   }
 };
 
+export const updateQuestion = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { question, isConfidential } = req.body;
+
+    if (!id) {
+      return res.status(400).json({ message: 'FnA id is required' });
+    }
+
+    if (!question || question.trim() === '') {
+      return res.status(400).json({ message: 'Question is required' });
+    }
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: 'Invalid FnA ID format' });
+    }
+
+    // Chỉ cho phép update câu hỏi nếu chưa được trả lời
+    const currentFnA = await FnA.findById(id);
+    if (!currentFnA) {
+      return res.status(404).json({ message: 'FnA not found' });
+    }
+
+    if (currentFnA.status === 'answered') {
+      return res.status(400).json({ message: 'Cannot update question that has been answered' });
+    }
+
+    const updateData = {
+      question: question.trim(),
+    };
+
+    if (isConfidential !== undefined) {
+      updateData.isConfidential = isConfidential;
+    }
+
+    const updatedFnA = await FnA.findByIdAndUpdate(id, updateData, { new: true })
+      .populate('askerId', 'firstName lastName')
+      .populate('doctorId', 'firstName lastName specialization');
+
+    res.status(200).json({
+      success: true,
+      message: 'Question updated successfully',
+      data: updatedFnA,
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 export const updateFnA = async (req, res) => {
   try {
     const { id } = req.params;
-    const { doctorId, answer, img, isPublished } = req.body;
+    const { doctorId, answer, isPublished } = req.body;
 
     if (!id || !doctorId || !answer) {
       return res.status(400).json({ message: 'fnA id, doctorId and answer are required' });
@@ -38,21 +88,31 @@ export const updateFnA = async (req, res) => {
       return res.status(400).json({ message: 'Invalid FnA ID format' });
     }
 
-    const updatedFnA = await FnA.findByIdAndUpdate(
-      id,
-      {
-        doctorId,
-        answer,
-        status: 'answered',
-        ...(img && { img }),
-        ...(isPublished !== undefined && { isPublished }),
-      },
-      { new: true }
-    );
-
-    if (!updatedFnA) {
+    // Lấy FnA hiện tại để kiểm tra ảnh cũ
+    const currentFnA = await FnA.findById(id);
+    if (!currentFnA) {
       return res.status(404).json({ message: 'FnA not found' });
     }
+
+    // Chuẩn bị update data
+    const updateData = {
+      doctorId,
+      answer,
+      status: 'answered',
+      ...(isPublished !== undefined && { isPublished }),
+    };
+
+    // Nếu có file upload, xử lý ảnh
+    if (req.file) {
+      // Xóa ảnh cũ nếu có
+      if (currentFnA.img) {
+        deleteImage(currentFnA.img);
+      }
+      // Lưu đường dẫn ảnh mới
+      updateData.img = getImageUrl(req.file.filename);
+    }
+
+    const updatedFnA = await FnA.findByIdAndUpdate(id, updateData, { new: true });
 
     res.status(200).json({
       success: true,
@@ -60,6 +120,10 @@ export const updateFnA = async (req, res) => {
       data: updatedFnA,
     });
   } catch (error) {
+    // Nếu có lỗi, xóa file đã upload
+    if (req.file) {
+      deleteImage(req.file.filename);
+    }
     res.status(500).json({ message: error.message });
   }
 };
@@ -140,6 +204,52 @@ export const deleteFnA = async (req, res) => {
     res.status(200).json({ message: 'FnA deleted successfully' });
   } catch (error) {
     res.status(400).json({ message: error.message });
+  }
+};
+
+export const deleteAnswer = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!id) {
+      return res.status(400).json({ message: 'FnA id is required' });
+    }
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: 'Invalid FnA ID format' });
+    }
+
+    const fna = await FnA.findById(id);
+    if (!fna) {
+      return res.status(404).json({ message: 'FnA not found' });
+    }
+
+    // Xóa ảnh nếu có
+    if (fna.img) {
+      deleteImage(fna.img);
+    }
+
+    // Reset câu trả lời về trạng thái pending
+    const updatedFnA = await FnA.findByIdAndUpdate(
+      id,
+      {
+        doctorId: null,
+        answer: null,
+        img: null,
+        status: 'pending',
+      },
+      { new: true }
+    )
+      .populate('askerId', 'firstName lastName')
+      .populate('doctorId', 'firstName lastName specialization');
+
+    res.status(200).json({
+      success: true,
+      message: 'Answer deleted successfully',
+      data: updatedFnA,
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
   }
 };
 

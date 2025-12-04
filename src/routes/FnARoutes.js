@@ -4,12 +4,15 @@ import {
   getAllFnA,
   getFnAByAsker,
   getPublishedFnA,
+  updateQuestion,
   updateFnA,
+  deleteAnswer,
   deleteFnA,
   getFnAByResponder,
   updateFnAPublicationStatus,
 } from '../controllers/FnAController.js';
 import { protect, authorize } from '../middleware/auth.js';
+import { handleUploadFnAImage, handleUploadError } from '../middleware/handleUploadFnAImage.js';
 
 const router = express.Router();
 
@@ -21,7 +24,9 @@ router.get('/asker/:askerId', getFnAByAsker);
 router.get('/responder/:doctorId', getFnAByResponder);
 
 router.post('/create', createFrequencyQuestion);
-router.put('/update/:id', updateFnA);
+router.put('/question/:id', updateQuestion);
+router.put('/update/:id', handleUploadFnAImage, handleUploadError, updateFnA);
+router.put('/delete-answer/:id', deleteAnswer);
 router.put('/publish/:id', updateFnAPublicationStatus);
 router.delete('/delete/:id', protect, deleteFnA);
 

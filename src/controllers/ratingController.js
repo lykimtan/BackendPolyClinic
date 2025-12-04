@@ -1,4 +1,5 @@
 import Rating from '../models/Rating.js';
+import User from '../models/User.js';
 import mongoose from 'mongoose';
 
 export const getRatingByDoctorId = async (req, res) => {
@@ -133,7 +134,7 @@ export const updateRating = async (req, res) => {
 
     await rating.save();
     const avgRating = await Rating.getAvgRating(rating.doctorId);
-    await Doctor.findByIdAndUpdate(rating.doctorId, { averageRating: avgRating });
+    await User.findByIdAndUpdate(rating.doctorId, { averageRating: avgRating });
     res.status(200).json({
       success: true,
       data: rating,
@@ -171,6 +172,72 @@ export const deleteRating = async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Something went wrong:' + error.message,
+    });
+  }
+};
+
+export const getTopRatedDoctors = async (req, res) => {
+  try {
+    const { limit = 10, minRating = 4.5 } = req.query;
+
+    // Get all ratings grouped by doctor
+    const ratingStats = await Rating.aggregate([
+      {
+        $group: {
+          _id: '$doctorId',
+          averageScore: { $avg: '$score' },
+          ratingCount: { $sum: 1 },
+        },
+      },
+      {
+        $match: {
+          averageScore: { $gte: parseFloat(minRating) },
+        },
+      },
+      {
+        $sort: { averageScore: -1 },
+      },
+      {
+        $limit: parseInt(limit),
+      },
+    ]);
+
+    if (!ratingStats || ratingStats.length === 0) {
+      return res.status(200).json({
+        success: true,
+        data: [],
+        message: 'No doctors found with the specified rating',
+      });
+    }
+
+    // Extract doctor IDs
+    const doctorIds = ratingStats.map(stat => stat._id);
+
+    // Fetch doctor information
+    const doctors = await User.find({ _id: { $in: doctorIds }, role: 'doctor' })
+      .populate('specializationIds')
+      .lean();
+
+    // Merge rating stats with doctor info
+    const doctorsWithRatings = doctors.map(doctor => {
+      const ratingInfo = ratingStats.find(stat => stat._id.toString() === doctor._id.toString());
+      return {
+        ...doctor,
+        averageRating: ratingInfo?.averageScore || 0,
+        ratingCount: ratingInfo?.ratingCount || 0,
+      };
+    });
+
+    res.status(200).json({
+      success: true,
+      count: doctorsWithRatings.length,
+      data: doctorsWithRatings,
+      message: `Found ${doctorsWithRatings.length} doctors with rating >= ${minRating}`,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Something went wrong: ' + error.message,
     });
   }
 };

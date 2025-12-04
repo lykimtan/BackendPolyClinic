@@ -5,6 +5,8 @@ import { connectDB } from './config/db.js';
 import { errorHandler, notFound } from './middleware/error.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { Server } from 'socket.io';
+import http from 'http';
 // Import routes
 import userRoutes from './routes/userRoutes.js';
 import medicationRoutes from './routes/medicationRoutes.js';
@@ -18,6 +20,7 @@ import RecurringScheduledules from './routes/recurringScheduleRoutes.js';
 import doctorRoutes from './routes/doctorRoutes.js';
 import authRoutes from './routes/authRoutes.js';
 import DoctorScheduleRoutes from './routes/doctorScheduleRoutes.js';
+import ratingRoutes from './routes/ratingRoutes.js';
 import cookieParser from 'cookie-parser'; //import cookie-parser
 
 // Import cronjob (automatically starts when imported)
@@ -70,6 +73,7 @@ app.use('/api/specializations', specializationRoutes);
 app.use('/api/doctors', doctorRoutes);
 app.use('/api/recurring-schedules', RecurringScheduledules);
 app.use('/api/doctor-schedules', DoctorScheduleRoutes);
+app.use('/api/ratings', ratingRoutes);
 
 // Basic route
 app.get('/', (req, res) => {
@@ -99,17 +103,49 @@ app.use(notFound);
 app.use(errorHandler);
 
 const PORT = process.env.PORT || 5000;
-const server = app.listen(PORT, () => {
-  console.log(`🚀 Server running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`);
+const httpServer = http.createServer(app);
+
+// Setup Socket.io
+const io = new Server(httpServer, {
+  cors: {
+    origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+    credentials: true,
+  },
+});
+
+// Socket.io connection handler
+io.on('connection', socket => {
+  console.log(`User connected: ${socket.id}`);
+
+  // Join user to their personal room (for targeted notifications)
+  socket.on('join_user_room', userId => {
+    socket.join(userId);
+    console.log(`User ${userId} joined room`);
+  });
+
+  // Leave user room
+  socket.on('leave_user_room', userId => {
+    socket.leave(userId);
+    console.log(`User ${userId} left room`);
+  });
+
+  // Disconnect handler
+  socket.on('disconnect', () => {
+    console.log(`User disconnected: ${socket.id}`);
+  });
+});
+
+httpServer.listen(PORT, () => {
+  console.log(`Server running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`);
 });
 
 // Handle unhandled promise rejections
 process.on('unhandledRejection', (err, promise) => {
   console.log(`Error: ${err.message}`);
   // Close server & exit process
-  server.close(() => {
+  httpServer.close(() => {
     process.exit(1);
   });
 });
 
-export default app;
+export { app, io };

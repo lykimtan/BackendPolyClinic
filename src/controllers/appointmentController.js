@@ -47,7 +47,7 @@ export const getAppointmentByDoctorId = async (req, res) => {
 
     const appointments = await Appointment.find(filter)
       .populate('patientId', 'firstName lastName email phone')
-      .populate('doctorId', 'firstName lastName email phone')
+      .populate('doctorId', 'firstName lastName email phone avatar yearsOfExperience')
       .populate('specializationId', 'name')
       .populate('scheduleId', 'date shift availableSlots')
       .sort({ appointmentDate: 1 });
@@ -133,7 +133,7 @@ export const getAllAppointmentsByDate = async (req, res) => {
         path: 'scheduleId',
         select: 'date shift availableSlots',
       })
-      .populate('doctorId', 'firstName lastName email phone')
+      .populate('doctorId', 'firstName lastName email phone avatar yearsOfExperience')
       .sort({ appointmentDate: 1 });
     
     // Gắn thông tin slot vào mỗi appointment
@@ -228,7 +228,7 @@ export const getAppointmentByPatientId = async (req, res) => {
     }
 
     const appointments = await Appointment.find(filter)
-      .populate('doctorId', 'firstName lastName email')
+      .populate('doctorId', 'firstName lastName email phone avatar yearsOfExperience')
       .populate('specializationId', 'name')
       .populate('patientId', 'name firstName lastName email phone')
       .populate('scheduleId', 'date shift availableSlots')
@@ -288,7 +288,7 @@ export const getAppointmentById = async (req, res) => {
     
     const appointment = await Appointment.findById(appointmentId)
       .populate('patientId')
-      .populate('doctorId', 'firstName lastName email phone')
+      .populate('doctorId', 'firstName lastName email phone avatar yearsOfExperience')
       .populate('specializationId', 'name')
       .populate('scheduleId', 'date shift availableSlots');
     if (!appointment) {
