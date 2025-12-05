@@ -1,10 +1,10 @@
-import User from '../models/User.js';
-import jwt from 'jsonwebtoken';
+import User from "../models/User.js";
+import jwt from "jsonwebtoken";
 
 // Generate JWT Token
 export const generateToken = (user) => {
   if (!process.env.JWT_SECRET) {
-    throw new Error('Missing JWT_SECRET in environment variables');
+    throw new Error("Missing JWT_SECRET in environment variables");
   }
 
   return jwt.sign(
@@ -12,7 +12,7 @@ export const generateToken = (user) => {
       _id: user._id,
     },
     process.env.JWT_SECRET,
-    { expiresIn: process.env.JWT_EXPIRE || '7d' } // mặc định 7 ngày
+    { expiresIn: process.env.JWT_EXPIRE || "7d" }, // mặc định 7 ngày
   );
 };
 
@@ -26,7 +26,7 @@ export const registerUser = async (req, res) => {
     if (userExists) {
       return res.status(400).json({
         success: false,
-        message: 'User already exists with this email',
+        message: "User already exists with this email",
       });
     }
 
@@ -36,7 +36,7 @@ export const registerUser = async (req, res) => {
       lastName,
       email,
       password,
-      role: role || 'patient',
+      role: role || "patient",
       phone,
       ...req.body, // Include other fields from request
     });
@@ -46,7 +46,7 @@ export const registerUser = async (req, res) => {
 
     res.status(201).json({
       success: true,
-      message: 'User registered successfully',
+      message: "User registered successfully",
       data: {
         user: {
           id: user._id,
@@ -79,16 +79,16 @@ export const loginUser = async (req, res) => {
     if (!email || !password) {
       return res.status(400).json({
         success: false,
-        message: 'Please provide email and password',
+        message: "Please provide email and password",
       });
     }
 
     // Check for user and include password for comparison
-    const user = await User.findOne({ email }).select('+password');
+    const user = await User.findOne({ email }).select("+password");
     if (!user) {
       return res.status(401).json({
         success: false,
-        message: 'Invalid credentials',
+        message: "Invalid credentials",
       });
     }
 
@@ -97,7 +97,7 @@ export const loginUser = async (req, res) => {
     if (!isPasswordValid) {
       return res.status(401).json({
         success: false,
-        message: 'Sai mật khẩu',
+        message: "Sai mật khẩu",
       });
     }
 
@@ -105,7 +105,7 @@ export const loginUser = async (req, res) => {
     if (!user.isActive) {
       return res.status(401).json({
         success: false,
-        message: 'Account is deactivated. Please contact administrator.',
+        message: "Account is deactivated. Please contact administrator.",
       });
     }
 
@@ -117,17 +117,17 @@ export const loginUser = async (req, res) => {
     const token = generateToken(user._id);
 
     // Set cookie with token (works for cross-origin with credentials)
-    res.cookie('auth_token', token, {
+    res.cookie("auth_token", token, {
       httpOnly: true, // không cho JS truy cập (bảo mật XSS)
-      secure: process.env.NODE_ENV === 'production', // HTTPS only in production
-      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax', // lax for dev, none for production cross-origin
+      secure: process.env.NODE_ENV === "production", // HTTPS only in production
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax", // lax for dev, none for production cross-origin
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 ngày (match JWT_EXPIRE)
-      path: '/', // Explicitly set path
+      path: "/", // Explicitly set path
     });
 
     res.status(200).json({
       success: true,
-      message: 'Login successful',
+      message: "Login successful",
       data: {
         user: {
           id: user._id,
@@ -159,16 +159,16 @@ export const loginUser = async (req, res) => {
 export const logoutUser = (req, res) => {
   try {
     // Clear the auth_token cookie
-    res.clearCookie('auth_token', {
+    res.clearCookie("auth_token", {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-      path: '/',
+      secure: process.env.NODE_ENV === "production",
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+      path: "/",
     });
 
     res.status(200).json({
       success: true,
-      message: 'Logged out successfully',
+      message: "Logged out successfully",
     });
   } catch (error) {
     res.status(400).json({
@@ -188,7 +188,7 @@ export const getUserProfile = async (req, res) => {
     if (!user) {
       return res.status(404).json({
         success: false,
-        message: 'User not found',
+        message: "User not found",
       });
     }
 
@@ -214,25 +214,25 @@ export const updateUserProfile = async (req, res) => {
     if (!user) {
       return res.status(404).json({
         success: false,
-        message: 'User not found',
+        message: "User not found",
       });
     }
 
     // Fields that can be updated
     const allowedUpdates = [
-      'firstName',
-      'lastName',
-      'phone',
-      'address',
-      'avatar',
-      'dateOfBirth',
-      'gender',
-      'allergies',
-      'medicalHistory',
-      'emergencyContact',
-      'department',
-      'specialization',
-      'yearsOfExperience',
+      "firstName",
+      "lastName",
+      "phone",
+      "address",
+      "avatar",
+      "dateOfBirth",
+      "gender",
+      "allergies",
+      "medicalHistory",
+      "emergencyContact",
+      "department",
+      "specialization",
+      "yearsOfExperience",
     ];
 
     // Update only allowed fields
@@ -250,7 +250,7 @@ export const updateUserProfile = async (req, res) => {
 
     res.status(200).json({
       success: true,
-      message: 'Profile updated successfully',
+      message: "Profile updated successfully",
       data: { user },
     });
   } catch (error) {
@@ -285,20 +285,23 @@ export const getAllUsers = async (req, res) => {
 
     // Filter by active status
     if (req.query.isActive !== undefined) {
-      query.isActive = req.query.isActive === 'true';
+      query.isActive = req.query.isActive === "true";
     }
 
     // Search by name or email
     if (req.query.search) {
       query.$or = [
-        { firstName: { $regex: req.query.search, $options: 'i' } },
-        { lastName: { $regex: req.query.search, $options: 'i' } },
-        { email: { $regex: req.query.search, $options: 'i' } },
+        { firstName: { $regex: req.query.search, $options: "i" } },
+        { lastName: { $regex: req.query.search, $options: "i" } },
+        { email: { $regex: req.query.search, $options: "i" } },
       ];
     }
 
     const total = await User.countDocuments(query);
-    const users = await User.find(query).limit(limit).skip(startIndex).sort({ createdAt: -1 });
+    const users = await User.find(query)
+      .limit(limit)
+      .skip(startIndex)
+      .sort({ createdAt: -1 });
 
     // Pagination result
     const pagination = {};
@@ -342,7 +345,7 @@ export const getUserById = async (req, res) => {
     if (!user) {
       return res.status(404).json({
         success: false,
-        message: 'User not found',
+        message: "User not found",
       });
     }
 
@@ -368,13 +371,13 @@ export const updateUser = async (req, res) => {
     if (!user) {
       return res.status(404).json({
         success: false,
-        message: 'User not found',
+        message: "User not found",
       });
     }
 
     // Update user
     Object.keys(req.body).forEach((key) => {
-      if (key !== 'password') {
+      if (key !== "password") {
         user[key] = req.body[key];
       }
     });
@@ -383,7 +386,7 @@ export const updateUser = async (req, res) => {
 
     res.status(200).json({
       success: true,
-      message: 'User updated successfully',
+      message: "User updated successfully",
       data: { user },
     });
   } catch (error) {
@@ -404,7 +407,7 @@ export const deleteUser = async (req, res) => {
     if (!user) {
       return res.status(404).json({
         success: false,
-        message: 'User not found',
+        message: "User not found",
       });
     }
 
@@ -414,7 +417,38 @@ export const deleteUser = async (req, res) => {
 
     res.status(200).json({
       success: true,
-      message: 'User deactivated successfully',
+      message: "User deactivated successfully",
+    });
+  } catch (error) {
+    res.status(400).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+// @desc    Enable user account
+// @route   PUT /api/users/:id/enable
+// @access  Private/Admin
+export const enableUser = async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id);
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    // Enable account
+    user.isActive = true;
+    await user.save();
+
+    res.status(200).json({
+      success: true,
+      message: "User activated successfully",
+      data: user,
     });
   } catch (error) {
     res.status(400).json({
@@ -434,16 +468,16 @@ export const changePassword = async (req, res) => {
     if (!currentPassword || !newPassword) {
       return res.status(400).json({
         success: false,
-        message: 'Please provide current and new password',
+        message: "Please provide current and new password",
       });
     }
 
-    const user = await User.findById(req.user._id).select('+password');
+    const user = await User.findById(req.user._id).select("+password");
 
     if (!user) {
       return res.status(404).json({
         success: false,
-        message: 'User not found',
+        message: "User not found",
       });
     }
 
@@ -452,7 +486,7 @@ export const changePassword = async (req, res) => {
     if (!isCurrentPasswordValid) {
       return res.status(400).json({
         success: false,
-        message: 'Current password is incorrect',
+        message: "Current password is incorrect",
       });
     }
 
@@ -462,7 +496,7 @@ export const changePassword = async (req, res) => {
 
     res.status(200).json({
       success: true,
-      message: 'Password changed successfully',
+      message: "Password changed successfully",
     });
   } catch (error) {
     res.status(400).json({
@@ -480,7 +514,7 @@ export const uploadUserAvatar = async (req, res) => {
     if (!req.file) {
       return res.status(400).json({
         success: false,
-        message: 'No file uploaded',
+        message: "No file uploaded",
       });
     }
 
@@ -494,7 +528,7 @@ export const uploadUserAvatar = async (req, res) => {
 
     res.status(200).json({
       success: true,
-      message: 'Avatar uploaded successfully',
+      message: "Avatar uploaded successfully",
       data: {
         avatarUrl: avatarUrl,
         filename: req.file.filename,

@@ -466,7 +466,7 @@ export const createAppointment = async (req, res) => {
       data: {
         model: 'Appointment',
         resourceId: savedAppointment._id,
-        route: `/doctor/appointments/${savedAppointment._id}`,
+        route: `/doctor/appointment/${savedAppointment._id}`,
       },
     });
     await notification.save();

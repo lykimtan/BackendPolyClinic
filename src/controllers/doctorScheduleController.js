@@ -23,7 +23,7 @@ export const createDoctorSchedule = async (req, res) => {
     if (isExist) {
       return res
         .status(400)
-        .json({ message: 'Schedule already exists for this doctor on the given date and shift' });
+        .json({ message: 'Lịch làm việc đã tồn tại cho bác sĩ này vào ngày và ca đã cho' });
     }
     await newSchedule.save();
     res.status(201).json({ message: 'Schedule created', data: newSchedule });
@@ -48,37 +48,3 @@ export const getDoctorSchedules = async (req, res) => {
   }
 }
 
-/* mau du lieu recurring cua mot bac si
-[
-  {
-    doctorId: "60a1c2d3e4f5a6b7c8d9e0f1", // ID của Bác sĩ Nguyễn Văn A
-    dayOfWeek: 1, // Thứ 2
-    shift: ["morning", "afternoon"],
-    createdBy: "admin_id_here"
-  },
-  {
-    doctorId: "60a1c2d3e4f5a6b7c8d9e0f1",
-    dayOfWeek: 2, // Thứ 3
-    shift: ["morning", "afternoon"],
-    createdBy: "admin_id_here"
-  },
-  {
-    doctorId: "60a1c2d3e4f5a6b7c8d9e0f1",
-    dayOfWeek: 3, // Thứ 4
-    shift: ["morning", "afternoon"],
-    createdBy: "admin_id_here"
-  },
-  {
-    doctorId: "60a1c2d3e4f5a6b7c8d9e0f1",
-    dayOfWeek: 4, // Thứ 5
-    shift: ["morning", "afternoon"],
-    createdBy: "admin_id_here"
-  },
-  {
-    doctorId: "60a1c2d3e4f5a6b7c8d9e0f1",
-    dayOfWeek: 5, // Thứ 6
-    shift: ["morning", "afternoon"],
-    createdBy: "admin_id_here"
-  }
-]
-*/

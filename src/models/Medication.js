@@ -15,7 +15,7 @@ const medicationSchema = new mongoose.Schema(
 
     form: {
       type: String,
-      enum: ['tablet', 'capsule', 'lozenge', 'vial', 'liquid', 'injection'],
+      enum: ['tablet', 'capsule', 'lozenge', 'vial', 'liquid', 'injection', 'powder', 'syrup'],
       required: true,
     },
 

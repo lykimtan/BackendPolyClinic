@@ -12,9 +12,11 @@ const getNextWeekDates = () => {
   const today = new Date();
   const dates = [];
 
-  // Tìm ngày bắt đầu của tuần tiếp theo (thứ 2)
+  // Vì cron chạy lúc 00:00 Chủ nhật nên:
+  // - today.getDay() = 0 (Chủ nhật)
+  // - Cần lấy Thứ 2 tuần tiếp theo = today + 1 ngày
   const nextMonday = new Date(today);
-  nextMonday.setDate(today.getDate() + ((7 - today.getDay() + 1) % 7) + 1);
+  nextMonday.setDate(today.getDate() + 1); // Chủ nhật + 1 = Thứ 2 tuần sau
 
   // Tạo 7 ngày từ thứ 2 tới chủ nhật
   for (let i = 0; i < 7; i++) {
