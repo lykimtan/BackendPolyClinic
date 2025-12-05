@@ -36,7 +36,7 @@ router.post('/', protect, createAppointment);
 router.put(
   '/:appointmentId/status',
   protect,
-  authorize('doctor', 'staff'),
+  authorize('doctor', 'staff', 'patient'),
   updateAppointmentStatus
 );
 

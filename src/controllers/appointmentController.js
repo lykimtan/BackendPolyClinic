@@ -1,6 +1,8 @@
 import DoctorSchedule from '../models/DoctorSchedule.js';
 import Appointment from '../models/Appointment.js';
 import User from '../models/User.js';
+import Notification from '../models/Notification.js';
+import { io } from '../app.js';
 
 //Lấy ds tất cả các lịch hẹn
 //getter
@@ -454,6 +456,24 @@ export const createAppointment = async (req, res) => {
       }
     );
 
+    // Create notification for doctor
+    const notification = new Notification({
+      userId: doctorId,
+      notificator: patientId,
+      title: 'Có bệnh nhân đặt lịch khám với bạn',
+      type: 'appointment',
+      content: `${patient.firstName} ${patient.lastName} đã đặt lịch khám với bạn vào ${new Date(appointmentDate).toLocaleDateString('vi-VN')}`,
+      data: {
+        model: 'Appointment',
+        resourceId: savedAppointment._id,
+        route: `/doctor/appointments/${savedAppointment._id}`,
+      },
+    });
+    await notification.save();
+
+    // Emit notification via Socket.io to doctor
+    io.to(doctorId).emit('receive_notification', notification);
+
     // Trả về kết quả
     return res.status(201).json({
       success: true,
@@ -491,6 +511,10 @@ export const updateAppointmentStatus = async (req, res) => {
         message: 'Appointment not found',
       });
     }
+
+    const patientId = appointment.patientId;
+    const doctorId = req.user._id;
+
     if (status === 'cancelled' || status === 'rejected') {
       appointment.status = status;
       if(status === 'rejected' && reasonForRejection) {
@@ -516,6 +540,52 @@ export const updateAppointmentStatus = async (req, res) => {
     }
 
     await appointment.save();
+
+    // Tạo notification cho bệnh nhân
+    const notificationMessages = {
+      confirmed: {
+        title: 'Lịch khám đã được xác nhận',
+        content: 'Bác sĩ đã xác nhận lịch khám của bạn. Vui lòng đến đúng giờ.',
+      },
+      rejected: {
+        title: 'Lịch khám bị từ chối',
+        content: reasonForRejection 
+          ? `Lịch khám bị từ chối. Lý do: ${reasonForRejection}`
+          : 'Lịch khám bị từ chối. Vui lòng đặt lịch mới.',
+      },
+      cancelled: {
+        title: 'Lịch khám đã bị hủy',
+        content: 'Lịch khám của bạn đã bị hủy. Bạn có thể đặt lịch mới.',
+      },
+      completed: {
+        title: 'Lịch khám đã hoàn thành',
+        content: 'Lịch khám của bạn đã hoàn thành. Vui lòng kiểm tra hồ sơ y tế.',
+      },
+    };
+
+    if (notificationMessages[status]) {
+      const { title, content } = notificationMessages[status];
+
+      const notification = new Notification({
+        userId: patientId,
+        notificator: doctorId,
+        title,
+        content,
+        type: 'appointment',
+        data: {
+          model: 'Appointment',
+          resourceId: appointmentId,
+          route: `/my-appointment/${appointmentId}`,
+        },
+      });
+
+      await notification.save();
+
+      // Gửi real-time notification qua Socket.io
+      io.to(patientId.toString()).emit('receive_notification', notification);
+
+      console.log('[DEBUG] Notification created and sent:', notification._id);
+    }
 
     return res.status(200).json({
       success: true,

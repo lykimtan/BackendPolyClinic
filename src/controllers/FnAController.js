@@ -1,7 +1,9 @@
 import FnA from '../models/FnA.js';
 import User from '../models/User.js';
+import Notification from '../models/Notification.js';
 import mongoose from 'mongoose';
 import { deleteImage, getImageUrl } from '../middleware/handleUploadFnAImage.js';
+import { io } from '../app.js';
 
 export const createFrequencyQuestion = async (req, res) => {
   try {
@@ -113,6 +115,28 @@ export const updateFnA = async (req, res) => {
     }
 
     const updatedFnA = await FnA.findByIdAndUpdate(id, updateData, { new: true });
+
+    // Get doctor and asker info for notification
+    const doctor = await User.findById(doctorId);
+    const fnaData = await FnA.findById(id).populate('askerId', 'firstName lastName');
+
+    // Create notification for asker
+    const notification = new Notification({
+      userId: fnaData.askerId._id,
+      notificator: doctorId,
+      title: 'Câu hỏi của bạn đã được trả lời',
+      type: 'fna',
+      content: `${doctor.firstName} ${doctor.lastName} vừa trả lời câu hỏi: "${fnaData.question.substring(0, 50)}..."`,
+      data: {
+        model: 'FnA',
+        resourceId: id,
+        route: `/fna-forum`,
+      },
+    });
+    await notification.save();
+
+    // Emit notification via Socket.io to asker
+    io.to(fnaData.askerId._id.toString()).emit('receive_notification', notification);
 
     res.status(200).json({
       success: true,

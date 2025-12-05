@@ -21,6 +21,7 @@ import doctorRoutes from './routes/doctorRoutes.js';
 import authRoutes from './routes/authRoutes.js';
 import DoctorScheduleRoutes from './routes/doctorScheduleRoutes.js';
 import ratingRoutes from './routes/ratingRoutes.js';
+import notificationRoutes from './routes/notificationRoutes.js';
 import cookieParser from 'cookie-parser'; //import cookie-parser
 
 // Import cronjob (automatically starts when imported)
@@ -74,6 +75,7 @@ app.use('/api/doctors', doctorRoutes);
 app.use('/api/recurring-schedules', RecurringScheduledules);
 app.use('/api/doctor-schedules', DoctorScheduleRoutes);
 app.use('/api/ratings', ratingRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 // Basic route
 app.get('/', (req, res) => {

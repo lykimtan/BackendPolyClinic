@@ -1,5 +1,7 @@
 import RoleRequest from '../models/RoleRequest.js';
 import User from '../models/User.js';
+import Notification from '../models/Notification.js';
+import { io } from '../app.js';
 
 // Upload document proof for role request
 export const uploadDocumentProof = async (req, res) => {
@@ -175,6 +177,24 @@ export const acceptRoleRequest = async (req, res) => {
     roleRequest.reviewedAt = new Date();
     await roleRequest.save();
 
+    // Create notification for user
+    const notification = new Notification({
+      userId: roleRequest.userId,
+      notificator: req.user._id,
+      title: 'Yêu cầu thay đổi vị trí được phê duyệt',
+      type: 'info',
+      content: `Yêu cầu thay đổi vị trí của bạn sang ${requestedRole} đã được phê duyệt. Để đảm nhận vai trò mới, vui lòng đăng nhập lại`,
+      data: {
+        model: 'RoleRequest',
+        resourceId: requestId,
+        route: '/userProfile',
+      },
+    });
+    await notification.save();
+
+    // Emit notification via Socket.io
+    io.to(roleRequest.userId.toString()).emit('receive_notification', notification);
+
     res.status(200).json({
       success: true,
       message: 'Role request approved and user role updated',
@@ -203,8 +223,28 @@ export const rejectedRoleRequest = async (req, res) => {
     // Cập nhật trạng thái yêu cầu
     roleRequest.status = 'rejected';
     roleRequest.note = note;
+    roleRequest.reviewedBy = req.user._id;
+    roleRequest.reviewedAt = new Date();
 
     await roleRequest.save();
+
+    // Create notification for user
+    const notification = new Notification({
+      userId: roleRequest.userId,
+      notificator: req.user._id,
+      title: 'Yêu cầu thay đổi vị trí bị từ chối',
+      type: 'warning',
+      content: `Yêu cầu thay đổi vị trí của bạn bị từ chối. Lý do: ${note || 'Không có lý do'}`,
+      data: {
+        model: 'RoleRequest',
+        resourceId: roleRequest._id,
+        route: '/role-requests',
+      },
+    });
+    await notification.save();
+
+    // Emit notification via Socket.io
+    io.to(roleRequest.userId.toString()).emit('receive_notification', notification);
 
     res.status(200).json({
       success: true,

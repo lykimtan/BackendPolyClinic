@@ -50,10 +50,8 @@ const notificationSchema = new mongoose.Schema(
   }
 );
 
-// Compound index: userId + isRead + createdAt (tối ưu cho query notifications chưa đọc)
 notificationSchema.index({ userId: 1, isRead: 1, createdAt: -1 });
 
-// TTL index: Tự động xóa notification cũ hơn 30 ngày
 notificationSchema.index({ createdAt: 1 }, { expireAfterSeconds: 2592000 });
 
 export default mongoose.model('Notification', notificationSchema);
