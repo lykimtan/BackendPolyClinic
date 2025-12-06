@@ -8,7 +8,7 @@ import { io } from '../app.js';
 //getter
 export const getAllAppointments = async (req, res) => {
   try {
-    const appointments = await Appointment.find();
+    const appointments = await Appointment.find().populate('doctorId', 'firstName lastName employeeId email phone avatar yearsOfExperience');
     if (!appointments.length) {
       return res.status(404).json({
         message: 'No appointment found',

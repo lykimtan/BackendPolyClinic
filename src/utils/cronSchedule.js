@@ -12,8 +12,7 @@ const getNextWeekDates = () => {
   const today = new Date();
   const dates = [];
 
-  // Vì cron chạy lúc 00:00 Chủ nhật nên:
-  // - today.getDay() = 0 (Chủ nhật)
+
   // - Cần lấy Thứ 2 tuần tiếp theo = today + 1 ngày
   const nextMonday = new Date(today);
   nextMonday.setDate(today.getDate() + 1); // Chủ nhật + 1 = Thứ 2 tuần sau
@@ -46,71 +45,106 @@ const generateSlotsForShift = (shift) => {
   }
 };
 
-// Chạy lúc 00:00 (0 giờ 0 phút) mỗi Chủ nhật (ngày 0)
-cron.schedule('0 0 * * 0', async () => {
+// Chạy lúc 01:17 (1 giờ 17 phút) mỗi Chủ nhật (ngày 0)
+cron.schedule('17 1 * * 0', async () => {
   //phút - giờ - ngày trong tháng - tháng - ngày trong tuần
   try {
-    console.log('Bắt đầu tạo lịch tự động cho tuần tới...');
+    console.log('========== BẮT ĐẦU TẠO LỊCH TỰ ĐỘNG ==========');
 
-    //chủ nhật hàng tuần sẽ sinh lịch tự động
     const nextWeek = getNextWeekDates();
-    const recurringSchedules = await RecurringScheduled.find().populate(
-      'doctorId',
-      'specializationId'
+    console.log(
+      `Tuần tới: ${nextWeek[0].toLocaleDateString('vi-VN')} - ${nextWeek[6].toLocaleDateString('vi-VN')}`
     );
-    console.log(`Tìm thấy ${recurringSchedules.length} lịch định kỳ.`);
+
+    const recurringSchedules = await RecurringScheduled.find().populate('doctorId');
+    console.log(`Tìm thấy ${recurringSchedules.length} lịch định kỳ\n`);
+
+    if (recurringSchedules.length === 0) {
+      console.log('Không có lịch định kỳ nào. Kết thúc.');
+      return;
+    }
 
     let createdCount = 0;
+    let skippedCount = 0;
     let errorCount = 0;
 
-    for (const recurringSchedule of recurringSchedules) {
-      // Lọc các ngày trong tuần phù hợp với dayOfWeek
-      const matchingDays = nextWeek.filter((d) => d.getDay() === recurringSchedule.dayOfWeek);
+    // Lặp qua từng lịch định kỳ
+    for (const recurring of recurringSchedules) {
+      const doctorId = recurring.doctorId._id;
+      const doctorName = recurring.doctorId.firstName + ' ' + recurring.doctorId.lastName;
+      const daysCount = recurring.dayOfWeek; // Số ngày làm việc liên tục (ví dụ: 5 = Thứ 2-6)
+      const shifts = recurring.shift;
 
-      // Lấy thông tin bác sĩ để có specializationIds
-      const doctor = await User.findById(recurringSchedule.doctorId).select('specializationIds');
+      console.log(`Bác sĩ: ${doctorName}`);
+      console.log(` Số ngày làm việc: ${daysCount} ngày (Thứ 2 - ${daysCount === 5 ? 'Thứ 6' : daysCount === 6 ? 'Thứ 7' : 'Chủ nhật'})`);
+      console.log(`Ca làm việc: ${shifts.join(', ')}`);
 
-      if (!doctor || !doctor.specializationIds || doctor.specializationIds.length === 0) {
-        console.error(`Không tìm thấy specializationIds của bác sĩ: ${recurringSchedule.doctorId}`);
-        errorCount++;
+      // Lấy daysCount ngày đầu tiên từ nextWeek (từ Thứ 2)
+      const matchingDates = nextWeek.slice(0, daysCount);
+
+      if (matchingDates.length === 0) {
+        console.log(`Không đủ ngày trong tuần tới`);
         continue;
       }
 
-      for (const date of matchingDays) {
-        for (const shift of recurringSchedule.shift) {
-          // Tạo lịch cho mỗi chuyên khoa của bác sĩ
-          for (const specializationId of doctor.specializationIds) {
-            try {
-              // Tạo slots dựa trên ca làm việc
-              const availableSlots = generateSlotsForShift(shift);
+      console.log(`Tạo lịch cho ${matchingDates.length} ngày: ${matchingDates.map((d) => d.toLocaleDateString('vi-VN')).join(', ')}`);
 
-              await DoctorSchedule.create({
-                doctorId: recurringSchedule.doctorId,
-                specializationId: specializationId,
-                date,
-                shift: [shift], // Chuyển thành mảng để phù hợp với schema
-                availableSlots,
-                createdBy: recurringSchedule.createdBy,
-                isActive: true,
-              });
+      // Lặp qua từng ngày phù hợp
+      for (const dateObj of matchingDates) {
+        // Đặt ngày về 00:00:00
+        const scheduleDate = new Date(dateObj);
+        scheduleDate.setHours(0, 0, 0, 0);
+        const dateStr = scheduleDate.toLocaleDateString('vi-VN');
 
-              createdCount++;
-            } catch (error) {
-              // Bỏ qua lỗi trùng lặp (do unique index), ghi log các lỗi khác
-              if (error.code !== 11000) {
-                console.error(`Lỗi khi tạo lịch: ${error.message}`);
-              }
-              errorCount++;
+        // Lặp qua từng ca làm việc
+        for (const shift of shifts) {
+          try {
+            // Kiểm tra xem lịch này đã tồn tại chưa
+            const existingSchedule = await DoctorSchedule.findOne({
+              doctorId,
+              date: scheduleDate,
+              shift: shift, // Kiểm tra shift là string, không phải array
+            });
+
+            if (existingSchedule) {
+              console.log(
+                `  Bỏ qua: ${dateStr} - Ca ${shift} (đã tồn tại)`
+              );
+              skippedCount++;
+              continue;
             }
+
+            const availableSlots = generateSlotsForShift(shift);
+
+            await DoctorSchedule.create({
+              doctorId,
+              specializationId: recurring.doctorId.specializationIds?.[0], // Lấy chuyên khoa chính
+              date: scheduleDate,
+              shift: shift, // Lưu shift là string
+              availableSlots,
+              createdBy: recurring.createdBy,
+              isActive: true,
+            });
+
+            createdCount++;
+            console.log(
+              `  Tạo: ${dateStr} - Ca ${shift} (${availableSlots.length} slots)`
+            );
+          } catch (error) {
+            console.error(
+              `  Lỗi: ${dateStr} - Ca ${shift}: ${error.message}`
+            );
+            errorCount++;
           }
         }
       }
     }
 
-    console.log(`Đã tạo ${createdCount} lịch làm việc cho tuần tiếp theo.`);
-    if (errorCount > 0) {
-      console.log(`Có ${errorCount} lỗi trong quá trình tạo lịch.`);
-    }
+    console.log('\n========== KẾT QUẢ ==========');
+    console.log(`Tạo mới: ${createdCount} lịch`);
+    console.log(`Bỏ qua: ${skippedCount} lịch (đã tồn tại)`);
+    console.log(`Lỗi: ${errorCount} lịch`);
+    console.log('========== KẾT THÚC ==========\n');
   } catch (error) {
     console.error('Lỗi khi tạo lịch tự động:', error);
   }

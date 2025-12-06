@@ -38,7 +38,7 @@ const doctorScheduleSchema = new mongoose.Schema(
     },
 
     shift: {
-      type: [String],
+      type: String,
       enum: ['morning', 'afternoon', 'evening'],
       required: true,
     },
